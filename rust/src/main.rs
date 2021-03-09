@@ -15,7 +15,7 @@ fn main() {
     read_target_file(config_files);
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 struct ConfibleFile {
     configs: Vec<Config>,
     commands: Vec<Command>,
