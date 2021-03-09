@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	toml "github.com/pelletier/go-toml"
@@ -36,7 +37,6 @@ func main() {
 	}
 
 	for _, configPath := range os.Args {
-
 		configFile, err := os.ReadFile(configPath)
 		if err != nil {
 			log.Fatalf("failed reading config (%v): %v\n", "TODO confg file", err)
@@ -46,12 +46,15 @@ func main() {
 		toml.Unmarshal(configFile, &config)
 
 		for _, cfg := range config.Configs {
-			// targetFile, err := os.ReadFile(cfg.Target)
-			// if err != nil {
-			// 	log.Fatalf("failed reading target file (%v): %v\n", cfg.Target, err)
-			// }
+			if strings.HasPrefix(cfg.Target, "~") {
+				home, err := os.UserHomeDir()
+				if err != nil {
+					log.Fatalf("failed getting home dir: %v\n", err)
+				}
+				cfg.Target = filepath.Join(home, cfg.Target[1:])
+			}
 
-			targetFile, err := os.Open(cfg.Target)
+			targetFile, err := os.OpenFile(cfg.Target, os.O_CREATE, 0o666)
 			if err != nil {
 				log.Fatalf("failed reading target file (%v): %v\n", cfg.Target, err)
 			}
@@ -96,8 +99,6 @@ func main() {
 			if err := os.WriteFile(cfg.Target, []byte(newContent.String()), os.ModePerm); err != nil {
 				log.Fatalf("failed writing target file (%v): %v\n", cfg.Target, err)
 			}
-
 		}
-
 	}
 }

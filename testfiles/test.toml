@@ -4,8 +4,6 @@
 [[commands]]
 command = "brew --version"
 
-
-
 [[configs]]
 target = "testfiles/testfile"
 comment = "#"
