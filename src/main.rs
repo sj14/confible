@@ -27,6 +27,8 @@ struct Config {
 }
 
 fn read_target_file(config_files: Vec<String>) {
+    let mut handled_targets : Vec<String> = Vec::new();
+
     for config_file in config_files {
         let mut file = OpenOptions::new()
             .write(true)
@@ -41,7 +43,14 @@ fn read_target_file(config_files: Vec<String>) {
             toml::from_str(content.as_ref()).expect("faild reading toml file");
 
         for cfg in appender_configs.configs {
-            println!("writing {}", cfg.target);
+            if handled_targets.contains(&cfg.target) {
+                // TODO: append values when same target is used.
+                // TODO: learn error handling ¯\_(ツ)_/¯
+                println!("same target in multiple configs not yet supported ({})", cfg.target);
+                std::process::exit(1);        
+            }
+
+            handled_targets.push(cfg.target.clone());
 
             let boundary_start = "CONFIBLE START";
             let boundary_stop = "CONFIBLE END";
@@ -52,7 +61,7 @@ fn read_target_file(config_files: Vec<String>) {
                 .write(true)
                 .read(true)
                 .create(true)
-                .open(cfg.target)
+                .open(cfg.target.clone())
                 .expect("failed open");
 
             let mut content = String::new();
@@ -81,6 +90,8 @@ fn read_target_file(config_files: Vec<String>) {
 
             // overwrite file with new config
             // TODO: add backup of file
+            println!("writing {}", cfg.target.clone());
+
             file.seek(std::io::SeekFrom::Start(0))
                 .expect("failed seeking");
             file.write_all(new_content.as_bytes())
