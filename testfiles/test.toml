@@ -1,6 +1,6 @@
 
 [[configs]]
-target = "testfile"
+target = "testfiles/testfile"
 comment = "#"
 append = """
 my_key=42
@@ -9,7 +9,7 @@ my_key=44
 """
 
 [[configs]]
-target = "testfile2"
+target = "testfiles/testfile2"
 comment = "§§§"
 append = """
 my_key=421
