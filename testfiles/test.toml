@@ -1,3 +1,10 @@
+# [[commands]]
+# command = "brew version"
+
+[[commands]]
+command = "brew --version"
+
+
 
 [[configs]]
 target = "testfiles/testfile"

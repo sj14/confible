@@ -5,7 +5,7 @@ use std::io::Seek;
 use std::io::Write;
 
 fn main() {
-    let config_files : Vec<String> = std::env::args().skip(2).collect();
+    let config_files: Vec<String> = std::env::args().skip(2).collect();
     if config_files.len() == 0 {
         println!("no config file given");
         std::process::exit(1);
@@ -15,8 +15,9 @@ fn main() {
 }
 
 #[derive(Deserialize)]
-struct Configs {
+struct ConfibleFile {
     configs: Vec<Config>,
+    commands: Vec<Command>,
 }
 
 #[derive(Deserialize)]
@@ -26,8 +27,13 @@ struct Config {
     append: String,
 }
 
+#[derive(Deserialize)]
+struct Command {
+    command: String,
+}
+
 fn read_target_file(config_files: Vec<String>) {
-    let mut handled_targets : Vec<String> = Vec::new();
+    let mut handled_targets: Vec<String> = Vec::new();
 
     for config_file in config_files {
         let mut file = OpenOptions::new()
@@ -39,15 +45,43 @@ fn read_target_file(config_files: Vec<String>) {
         let mut content = String::new();
         file.read_to_string(&mut content).expect("failed reading");
 
-        let appender_configs: Configs =
+        let appender_configs: ConfibleFile =
             toml::from_str(content.as_ref()).expect("faild reading toml file");
+
+        for cfg_cmd in appender_configs.commands {
+            let mut args = cfg_cmd.command.split_whitespace().collect::<Vec<&str>>();
+            let mut cmd = std::process::Command::new(args[0]);
+            args.remove(0);
+            cmd.args(args);
+            let output = match cmd.output() {
+                Ok(v) => v,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    continue;
+                }
+            };
+
+            let stdout = std::str::from_utf8(&output.stdout).expect("Could not convert stdout to string");
+            let stderr = std::str::from_utf8(&output.stderr).expect("Could not convert stderr to string");
+
+            println!("{}", stdout.trim_end());
+            eprintln!("{}", stderr.trim_end());
+
+            if !output.status.success() {
+                eprintln!("failed executing '{}'", cfg_cmd.command);
+                std::process::exit(1);
+            }
+        }
 
         for cfg in appender_configs.configs {
             if handled_targets.contains(&cfg.target) {
                 // TODO: append values when same target is used.
                 // TODO: learn error handling ¯\_(ツ)_/¯
-                println!("same target in multiple configs not yet supported ({})", cfg.target);
-                std::process::exit(1);        
+                println!(
+                    "same target in multiple configs not yet supported ({})",
+                    cfg.target
+                );
+                std::process::exit(1);
             }
 
             handled_targets.push(cfg.target.clone());
