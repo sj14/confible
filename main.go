@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	toml "github.com/pelletier/go-toml"
 )
@@ -18,11 +19,11 @@ type confibleFile struct {
 }
 
 type config struct {
-	Name          string `toml:"name"`
-	Path          string `toml:"path"`
-	Truncate      bool   `toml:"truncate"`
-	CommentSymbol string `toml:"comment_symbol"`
-	Append        string `toml:"append"`
+	Name     string `toml:"name"`
+	Path     string `toml:"path"`
+	Truncate bool   `toml:"truncate"`
+	Comment  string `toml:"comment_symbol"`
+	Append   string `toml:"append"`
 }
 
 type command struct {
@@ -110,7 +111,7 @@ func modifyFiles(configs []config) {
 		if cfg.Path == "" {
 			log.Fatalf("missing target\n")
 		}
-		if cfg.CommentSymbol == "" {
+		if cfg.Comment == "" {
 			log.Fatalf("missing comment symbol\n")
 		}
 
@@ -128,8 +129,8 @@ func modifyFiles(configs []config) {
 		}
 
 		old := configsMap[cfg.Path]
-		if old.CommentSymbol != cfg.CommentSymbol {
-			log.Printf("multiple comment styles for %q (%v) and %q (%v) using %v\n", old.Name, old.CommentSymbol, cfg.Name, cfg.CommentSymbol, old.CommentSymbol)
+		if old.Comment != cfg.Comment {
+			log.Printf("multiple comment styles for %q (%v) and %q (%v) using %v\n", old.Name, old.Comment, cfg.Name, cfg.Comment, old.Comment)
 		}
 		if old.Truncate != cfg.Truncate {
 			log.Fatalf("file should be truncated and not '%v' \n", old.Path)
@@ -177,13 +178,13 @@ func modifyFiles(configs []config) {
 			log.Fatal(err)
 		}
 
-		if _, err := newContent.WriteString(cfg.CommentSymbol + " " + header + "\n"); err != nil {
+		if _, err := newContent.WriteString(cfg.Comment + " " + header + "\n" + cfg.Comment + " " + time.Now().Format(time.RFC1123) + "\n"); err != nil {
 			log.Fatalln(err)
 		}
 		if _, err := newContent.WriteString(cfg.Append); err != nil {
 			log.Fatalln(err)
 		}
-		if _, err := newContent.WriteString("\n" + cfg.CommentSymbol + " " + footer + "\n"); err != nil {
+		if _, err := newContent.WriteString("\n" + cfg.Comment + " " + footer + "\n"); err != nil {
 			log.Fatalln(err)
 		}
 
