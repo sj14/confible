@@ -36,10 +36,15 @@ func main() {
 		log.Fatalln("need config file")
 	}
 
-	var (
-		configs []Config
-	)
+	var configs []Config
+	handledPaths := make(map[string]struct{})
+
 	for _, configPath := range os.Args[1:] {
+		// check if the same config file would be applied multiple times
+		if _, ok := handledPaths[configPath]; ok {
+			continue
+		}
+		handledPaths[configPath] = struct{}{}
 		log.Printf("parsing config %v\n", configPath)
 
 		configFile, err := os.Open(configPath)
@@ -78,6 +83,8 @@ func main() {
 }
 
 func modifyFiles(configs []Config) {
+	configsMap := make(map[string]Config)
+
 	for _, cfg := range configs {
 		if cfg.Append == "" {
 			log.Fatalf("missing append\n")
@@ -97,6 +104,21 @@ func modifyFiles(configs []Config) {
 			cfg.Target = filepath.Join(home, cfg.Target[1:])
 		}
 
+		if _, ok := configsMap[cfg.Target]; !ok {
+			configsMap[cfg.Target] = cfg
+			continue
+		}
+
+		old := configsMap[cfg.Target]
+		// if old.CommentSymbol != cfg.CommentSymbol {
+		// 	log.Fatalf("multiple comment styles for same file (%v) are not supported (%v vs %v)\n", old.Target, old.CommentSymbol, cfg.CommentSymbol)
+		// }
+
+		old.Append += cfg.Append
+		configsMap[cfg.Target] = old
+	}
+
+	for _, cfg := range configsMap {
 		targetFile, err := os.OpenFile(cfg.Target, os.O_CREATE, 0o666)
 		if err != nil {
 			log.Fatalf("failed reading target file (%v): %v\n", cfg.Target, err)

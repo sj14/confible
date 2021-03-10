@@ -1,10 +1,8 @@
-# [[commands]]
-# command = "brew version"
 
 [[commands]]
 commands = [
-    "brew --version",
     "echo yo",
+    "echo yoyo",
 ]
 
 [[configs]]
@@ -17,10 +15,20 @@ my_key=44
 """
 
 [[configs]]
-target = "testfiles/testfile2"
-comment_symbol = "§§§"
+target = "testfiles/testfile"
+comment_symbol = "$$$"
 append = """
-my_key=421
-my_key=431
-my_key=441
+your_key=421
+your_kEy=431
+your_key=441
+"""
+
+
+[[configs]]
+target = "testfiles/testfile2"
+comment_symbol = "$$$"
+append = """
+our_key=5421
+our_key=5431
+our_key=5441
 """
