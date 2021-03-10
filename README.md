@@ -31,7 +31,7 @@ exec = [
 [[config]]
 name = "modify vimrc"
 path = "~/.vimrc"
-comment_symbol = "#"
+comment_symbol = "\""
 append = """
 set number
 syntax on
@@ -48,14 +48,14 @@ Feel free to adjust the config and rerun `confible` for updating the `zshrc` to 
 content not handled by confible
 ...
 
-# ~~~ CONFIBLE START ~~~
-# Wed, 10 Mar 2021 22:10:04 CET
+" ~~~ CONFIBLE START ~~~
+" Wed, 10 Mar 2021 22:10:04 CET
 set number
 syntax on
 set ruler
 filetype indent plugin on
 
-# ~~~ CONFIBLE END ~~~
+" ~~~ CONFIBLE END ~~~
 ```
 
 ## Config Specification
