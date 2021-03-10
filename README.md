@@ -42,7 +42,7 @@ filetype indent plugin on
 Beside the `yo` and `yoyo` outputs from the `[[commands]]` section, the `[[config]]` section will result into the below shown `zshrc` file.  
 Feel free to adjust the config and rerun `confible` for updating the `zshrc` to the latest version.
 
-```toml
+```text
 ...
 content not handled by confible
 ...
