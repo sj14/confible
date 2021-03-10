@@ -12,18 +12,18 @@ import (
 )
 
 type ConfibleFile struct {
-	Configs  []Config
-	Commands []Commands
+	Configs  []Config  `toml:"configs"`
+	Commands []Command `toml:"commands"`
 }
 
 type Config struct {
-	Target        string
+	Target        string `toml:"target"`
 	CommentSymbol string `toml:"comment_symbol"`
-	Append        string
+	Append        string `toml:"append"`
 }
 
-type Commands struct {
-	Commands []string
+type Command struct {
+	Exec []string `toml:"exec"`
 }
 
 const (
@@ -64,7 +64,7 @@ func main() {
 		configs = append(configs, config.Configs...)
 
 		for _, commands := range config.Commands {
-			for _, cmd := range commands.Commands {
+			for _, cmd := range commands.Exec {
 				args := strings.Split(cmd, " ")
 				c := exec.Command(args[0], args[1:]...)
 				c.Stderr = os.Stderr
