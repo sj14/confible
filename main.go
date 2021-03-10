@@ -42,13 +42,16 @@ func main() {
 	for _, configPath := range os.Args[1:] {
 		log.Printf("parsing config %v\n", configPath)
 
-		configFile, err := os.ReadFile(configPath)
+		configFile, err := os.Open(configPath)
 		if err != nil {
 			log.Fatalf("failed reading config (%v): %v\n", "TODO confg file", err)
 		}
 
+		dec := toml.NewDecoder(configFile)
+		dec.Strict(true)
+
 		config := ConfibleFile{}
-		if err := toml.Unmarshal(configFile, &config); err != nil {
+		if err := dec.Decode(&config); err != nil {
 			log.Printf("failed unmarshalling config file: %v\n", err)
 		}
 
@@ -58,12 +61,11 @@ func main() {
 		for _, commands := range config.Commands {
 			for _, cmd := range commands.Commands {
 				args := strings.Split(cmd, " ")
-
-				log.Println(args)
-
 				c := exec.Command(args[0], args[1:]...)
 				c.Stderr = os.Stderr
 				c.Stdout = os.Stdout
+
+				log.Printf("running command: %v\n", cmd)
 
 				if err := c.Run(); err != nil {
 					log.Fatalf("failed running command '%v': %v\n", cmd, err)
