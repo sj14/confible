@@ -110,9 +110,9 @@ func modifyFiles(configs []Config) {
 		}
 
 		old := configsMap[cfg.Target]
-		// if old.CommentSymbol != cfg.CommentSymbol {
-		// 	log.Fatalf("multiple comment styles for same file (%v) are not supported (%v vs %v)\n", old.Target, old.CommentSymbol, cfg.CommentSymbol)
-		// }
+		if old.CommentSymbol != cfg.CommentSymbol {
+			log.Printf("multiple comment styles for same file '%v' (%v vs %v) using %v\n", old.Target, old.CommentSymbol, cfg.CommentSymbol, old.CommentSymbol)
+		}
 
 		old.Append += cfg.Append
 		configsMap[cfg.Target] = old
