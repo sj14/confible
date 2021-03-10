@@ -1,12 +1,14 @@
-
 [[commands]]
+name = "test commands"
 exec = [
     "echo yo", 
     "echo yoyo",
 ]
 
-[[configs]]
-target = "testfiles/testfile"
+[[config]]
+name = "testfile 1"
+path = "testfiles/testfile"
+#truncate = true
 comment_symbol = "#"
 append = """
 my_key=42
@@ -14,8 +16,9 @@ my_key=43
 my_key=44
 """
 
-[[configs]]
-target = "testfiles/testfile"
+[[config]]
+name = "testfile 1x2"
+path = "testfiles/testfile"
 comment_symbol = "$$$"
 append = """
 your_key=421
@@ -23,9 +26,9 @@ your_kEy=431
 your_key=441
 """
 
-
-[[configs]]
-target = "testfiles/testfile2"
+[[config]]
+name = "testfile 2"
+path = "testfiles/testfile2"
 comment_symbol = "$$$"
 append = """
 our_key=5421

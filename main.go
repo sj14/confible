@@ -12,17 +12,20 @@ import (
 )
 
 type ConfibleFile struct {
-	Configs  []Config  `toml:"configs"`
+	Configs  []Config  `toml:"config"`
 	Commands []Command `toml:"commands"`
 }
 
 type Config struct {
-	Target        string `toml:"target"`
+	Name          string `toml:"name"`
+	Path          string `toml:"path"`
+	Truncate      bool   `toml:"truncate"`
 	CommentSymbol string `toml:"comment_symbol"`
 	Append        string `toml:"append"`
 }
 
 type Command struct {
+	Name string   `toml:"name"`
 	Exec []string `toml:"exec"`
 }
 
@@ -70,7 +73,7 @@ func main() {
 				c.Stderr = os.Stderr
 				c.Stdout = os.Stdout
 
-				log.Printf("running command: %v\n", cmd)
+				log.Printf("[%v] running: %v\n", commands.Name, cmd)
 
 				if err := c.Run(); err != nil {
 					log.Fatalf("failed running command '%v': %v\n", cmd, err)
@@ -89,39 +92,47 @@ func modifyFiles(configs []Config) {
 		if cfg.Append == "" {
 			log.Fatalf("missing append\n")
 		}
-		if cfg.Target == "" {
+		if cfg.Path == "" {
 			log.Fatalf("missing target\n")
 		}
 		if cfg.CommentSymbol == "" {
 			log.Fatalf("missing comment symbol\n")
 		}
 
-		if strings.HasPrefix(cfg.Target, "~") {
+		if strings.HasPrefix(cfg.Path, "~") {
 			home, err := os.UserHomeDir()
 			if err != nil {
 				log.Fatalf("failed getting home dir: %v\n", err)
 			}
-			cfg.Target = filepath.Join(home, cfg.Target[1:])
+			cfg.Path = filepath.Join(home, cfg.Path[1:])
 		}
 
-		if _, ok := configsMap[cfg.Target]; !ok {
-			configsMap[cfg.Target] = cfg
+		if _, ok := configsMap[cfg.Path]; !ok {
+			configsMap[cfg.Path] = cfg
 			continue
 		}
 
-		old := configsMap[cfg.Target]
+		old := configsMap[cfg.Path]
 		if old.CommentSymbol != cfg.CommentSymbol {
-			log.Printf("multiple comment styles for same file '%v' (%v vs %v) using %v\n", old.Target, old.CommentSymbol, cfg.CommentSymbol, old.CommentSymbol)
+			log.Printf("multiple comment styles for %q (%v) and %q (%v) using %v\n", old.Name, old.CommentSymbol, cfg.Name, cfg.CommentSymbol, old.CommentSymbol)
+		}
+		if old.Truncate != cfg.Truncate {
+			log.Fatalf("file should be truncated and not '%v' \n", old.Path)
 		}
 
 		old.Append += cfg.Append
-		configsMap[cfg.Target] = old
+		configsMap[cfg.Path] = old
 	}
 
 	for _, cfg := range configsMap {
-		targetFile, err := os.OpenFile(cfg.Target, os.O_CREATE, 0o666)
+		flag := os.O_CREATE
+		if cfg.Truncate {
+			flag = os.O_CREATE | os.O_TRUNC
+		}
+
+		targetFile, err := os.OpenFile(cfg.Path, flag, 0o666)
 		if err != nil {
-			log.Fatalf("failed reading target file (%v): %v\n", cfg.Target, err)
+			log.Fatalf("failed reading target file (%v): %v\n", cfg.Path, err)
 		}
 		defer targetFile.Close()
 
@@ -161,8 +172,8 @@ func modifyFiles(configs []Config) {
 			log.Fatalln(err)
 		}
 
-		if err := os.WriteFile(cfg.Target, []byte(newContent.String()), os.ModePerm); err != nil {
-			log.Fatalf("failed writing target file (%v): %v\n", cfg.Target, err)
+		if err := os.WriteFile(cfg.Path, []byte(newContent.String()), os.ModePerm); err != nil {
+			log.Fatalf("failed writing target file (%v): %v\n", cfg.Path, err)
 		}
 	}
 }
