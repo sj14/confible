@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"log"
 	"os"
 	"os/exec"
@@ -35,14 +36,20 @@ const (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	var (
+		noCommands = flag.Bool("no-cmd", false, "do not exec any commands")
+		noConfig   = flag.Bool("no-cfg", false, "do not apply any configs")
+	)
+	flag.Parse()
+
+	if flag.NArg() < 1 {
 		log.Fatalln("need a config file")
 	}
 
 	var configs []config
 	handledPaths := make(map[string]struct{})
 
-	for _, configPath := range os.Args[1:] {
+	for _, configPath := range flag.Args() {
 		// check if the same config file would be applied multiple times
 		if _, ok := handledPaths[configPath]; ok {
 			continue
@@ -52,7 +59,7 @@ func main() {
 
 		configFile, err := os.Open(configPath)
 		if err != nil {
-			log.Fatalf("failed reading config (%v): %v\n", "TODO confg file", err)
+			log.Fatalf("failed reading config (%v): %v\n", configPath, err)
 		}
 
 		dec := toml.NewDecoder(configFile)
@@ -66,10 +73,14 @@ func main() {
 		// Aggregate all configs before appending
 		configs = append(configs, config.Configs...)
 
-		execCmds(config.Commands)
+		if !*noCommands {
+			execCmds(config.Commands)
+		}
 	}
 
-	modifyFiles(configs)
+	if !*noConfig {
+		modifyFiles(configs)
+	}
 }
 
 func execCmds(commands []command) {
