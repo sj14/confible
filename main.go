@@ -11,12 +11,12 @@ import (
 	toml "github.com/pelletier/go-toml"
 )
 
-type ConfibleFile struct {
-	Configs  []Config  `toml:"config"`
-	Commands []Command `toml:"commands"`
+type confibleFile struct {
+	Configs  []config  `toml:"config"`
+	Commands []command `toml:"commands"`
 }
 
-type Config struct {
+type config struct {
 	Name          string `toml:"name"`
 	Path          string `toml:"path"`
 	Truncate      bool   `toml:"truncate"`
@@ -24,7 +24,7 @@ type Config struct {
 	Append        string `toml:"append"`
 }
 
-type Command struct {
+type command struct {
 	Name string   `toml:"name"`
 	Exec []string `toml:"exec"`
 }
@@ -36,10 +36,10 @@ const (
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatalln("need config file")
+		log.Fatalln("need a config file")
 	}
 
-	var configs []Config
+	var configs []config
 	handledPaths := make(map[string]struct{})
 
 	for _, configPath := range os.Args[1:] {
@@ -58,35 +58,39 @@ func main() {
 		dec := toml.NewDecoder(configFile)
 		dec.Strict(true)
 
-		config := ConfibleFile{}
+		config := confibleFile{}
 		if err := dec.Decode(&config); err != nil {
-			log.Printf("failed unmarshalling config file: %v\n", err)
+			log.Fatalf("failed unmarshalling config file: %v\n", err)
 		}
 
-		// Aggregate all configs before executing
+		// Aggregate all configs before appending
 		configs = append(configs, config.Configs...)
 
-		for _, commands := range config.Commands {
-			for _, cmd := range commands.Exec {
-				args := strings.Split(cmd, " ")
-				c := exec.Command(args[0], args[1:]...)
-				c.Stderr = os.Stderr
-				c.Stdout = os.Stdout
-
-				log.Printf("[%v] running: %v\n", commands.Name, cmd)
-
-				if err := c.Run(); err != nil {
-					log.Fatalf("failed running command '%v': %v\n", cmd, err)
-				}
-			}
-		}
+		execCmds(config.Commands)
 	}
 
 	modifyFiles(configs)
 }
 
-func modifyFiles(configs []Config) {
-	configsMap := make(map[string]Config)
+func execCmds(commands []command) {
+	for _, commands := range commands {
+		for _, cmd := range commands.Exec {
+			args := strings.Split(cmd, " ")
+			c := exec.Command(args[0], args[1:]...)
+			c.Stderr = os.Stderr
+			c.Stdout = os.Stdout
+
+			log.Printf("[%v] running: %v\n", commands.Name, cmd)
+
+			if err := c.Run(); err != nil {
+				log.Fatalf("failed running command '%v': %v\n", cmd, err)
+			}
+		}
+	}
+}
+
+func modifyFiles(configs []config) {
+	configsMap := make(map[string]config)
 
 	for _, cfg := range configs {
 		if cfg.Append == "" {
