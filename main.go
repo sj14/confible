@@ -75,7 +75,7 @@ func main() {
 func execCmds(commands []command) {
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
-			args := strings.Split(cmd, " ")
+			args := strings.Split(strings.TrimSpace(cmd), " ")
 			c := exec.Command(args[0], args[1:]...)
 			c.Stderr = os.Stderr
 			c.Stdout = os.Stdout
