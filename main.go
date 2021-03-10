@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -12,17 +13,17 @@ import (
 
 type ConfibleFile struct {
 	Configs  []Config
-	Commands []Command
+	Commands []Commands
 }
 
 type Config struct {
-	Target  string
-	Comment string
-	Append  string
+	Target        string
+	CommentSymbol string `toml:"comment_symbol"`
+	Append        string
 }
 
-type Command struct {
-	Command string
+type Commands struct {
+	Commands []string
 }
 
 const (
@@ -31,12 +32,13 @@ const (
 )
 
 func main() {
-
 	if len(os.Args) < 2 {
 		log.Fatalln("need config file")
 	}
 
-	var configs []Config
+	var (
+		configs []Config
+	)
 	for _, configPath := range os.Args[1:] {
 		log.Printf("parsing config %v\n", configPath)
 
@@ -53,8 +55,21 @@ func main() {
 		// Aggregate all configs before executing
 		configs = append(configs, config.Configs...)
 
-		// TODO: run commands
-		// config.Commands
+		for _, commands := range config.Commands {
+			for _, cmd := range commands.Commands {
+				args := strings.Split(cmd, " ")
+
+				log.Println(args)
+
+				c := exec.Command(args[0], args[1:]...)
+				c.Stderr = os.Stderr
+				c.Stdout = os.Stdout
+
+				if err := c.Run(); err != nil {
+					log.Fatalf("failed running command '%v': %v\n", cmd, err)
+				}
+			}
+		}
 	}
 
 	modifyFiles(configs)
@@ -62,6 +77,16 @@ func main() {
 
 func modifyFiles(configs []Config) {
 	for _, cfg := range configs {
+		if cfg.Append == "" {
+			log.Fatalf("missing append\n")
+		}
+		if cfg.Target == "" {
+			log.Fatalf("missing target\n")
+		}
+		if cfg.CommentSymbol == "" {
+			log.Fatalf("missing comment symbol\n")
+		}
+
 		if strings.HasPrefix(cfg.Target, "~") {
 			home, err := os.UserHomeDir()
 			if err != nil {
@@ -102,13 +127,13 @@ func modifyFiles(configs []Config) {
 			log.Fatal(err)
 		}
 
-		if _, err := newContent.WriteString(cfg.Comment + " " + header + "\n"); err != nil {
+		if _, err := newContent.WriteString(cfg.CommentSymbol + " " + header + "\n"); err != nil {
 			log.Fatalln(err)
 		}
 		if _, err := newContent.WriteString(cfg.Append); err != nil {
 			log.Fatalln(err)
 		}
-		if _, err := newContent.WriteString("\n" + cfg.Comment + " " + footer + "\n"); err != nil {
+		if _, err := newContent.WriteString("\n" + cfg.CommentSymbol + " " + footer + "\n"); err != nil {
 			log.Fatalln(err)
 		}
 

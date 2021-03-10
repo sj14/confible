@@ -2,11 +2,14 @@
 # command = "brew version"
 
 [[commands]]
-command = "brew --version"
+commands = [
+    "brew --version",
+    "echo yo",
+]
 
 [[configs]]
 target = "testfiles/testfile"
-comment = "#"
+comment_symbol = "#"
 append = """
 my_key=42
 my_key=43
@@ -15,7 +18,7 @@ my_key=44
 
 [[configs]]
 target = "testfiles/testfile2"
-comment = "§§§"
+comment_symbol = "§§§"
 append = """
 my_key=421
 my_key=431
