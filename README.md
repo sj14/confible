@@ -29,6 +29,7 @@ exec = [
 ]
 
 [[config]]
+name = "modify vimrc"
 path = "~/.vimrc"
 comment_symbol = "#"
 append = """
@@ -54,4 +55,24 @@ set ruler
 filetype indent plugin on
 
 # CONFIBLE END
+```
+
+## Config Specification
+
+```toml
+[[commands]]
+name = "test commands"
+exec = [
+    "echo yo", 
+    "echo yoyo",
+]
+
+[[config]]
+name = "adjust my config" # optional
+path = "file/to/target"
+truncate = false # enable for erasing target file beforehand (optional)
+comment_symbol = "//" # symbol which is recognized as a comment by the target file
+append = """
+what you want to add
+"""
 ```
