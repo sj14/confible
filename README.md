@@ -18,7 +18,7 @@ Usage of confible:
         do not exec any commands
 ```
 
-Example config
+## Example
 
 ```toml
 [[commands]]
