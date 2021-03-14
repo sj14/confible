@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -84,10 +85,14 @@ func main() {
 	}
 }
 
+// split on spaces except when inside quotes
+var regArgs = regexp.MustCompile(`("[^"]+?"\S*|\S+)`)
+
 func execCmds(commands []command) {
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
-			args := strings.Split(strings.TrimSpace(cmd), " ")
+			args := regArgs.FindAllString(cmd, -1)
+
 			c := exec.Command(args[0], args[1:]...)
 			c.Stderr = os.Stderr
 			c.Stdout = os.Stdout

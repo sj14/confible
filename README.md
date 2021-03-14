@@ -7,7 +7,7 @@ When configs are applied, a boundary header and footer are added which allows ex
 ## Usage
 
 ```bash
-confible [flags] <config.toml>
+confible [flags] <config.toml> [...]
 ```
 
 ```text
