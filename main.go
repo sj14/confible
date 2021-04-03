@@ -106,7 +106,9 @@ func execCmds(commands []command) {
 	}
 }
 
-func modifyFiles(configs []config) {
+// validate and aggregate configs which target the same file
+func aggregateConfigs(configs []config) []config {
+	// the key is the path of the config file
 	configsMap := make(map[string]config)
 
 	for _, cfg := range configs {
@@ -128,11 +130,13 @@ func modifyFiles(configs []config) {
 			cfg.Path = filepath.Join(home, cfg.Path[1:])
 		}
 
+		// add a new config path (no need for aggregating)
 		if _, ok := configsMap[cfg.Path]; !ok {
 			configsMap[cfg.Path] = cfg
 			continue
 		}
 
+		// aggregate with existing config path
 		old := configsMap[cfg.Path]
 		if old.Comment != cfg.Comment {
 			log.Printf("multiple comment styles for %q (%v) and %q (%v) using %v\n", old.Name, old.Comment, cfg.Name, cfg.Comment, old.Comment)
@@ -145,7 +149,18 @@ func modifyFiles(configs []config) {
 		configsMap[cfg.Path] = old
 	}
 
+	var aggregated []config
 	for _, cfg := range configsMap {
+		aggregated = append(aggregated, cfg)
+	}
+
+	return aggregated
+}
+
+func modifyFiles(configs []config) {
+	configs = aggregateConfigs(configs)
+
+	for _, cfg := range configs {
 		flag := os.O_CREATE
 		if cfg.Truncate {
 			flag = os.O_CREATE | os.O_TRUNC
