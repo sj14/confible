@@ -201,7 +201,7 @@ func modifyFiles(configs []config) {
 		if _, err := newContent.WriteString(cfg.Comment + " ~~~ " + header + " ~~~\n" + cfg.Comment + " " + time.Now().Format(time.RFC1123) + "\n"); err != nil {
 			log.Fatalln(err)
 		}
-		if _, err := newContent.WriteString(cfg.Append); err != nil {
+		if _, err := newContent.WriteString(strings.TrimSuffix(cfg.Append, "\n")); err != nil {
 			log.Fatalln(err)
 		}
 		if _, err := newContent.WriteString("\n" + cfg.Comment + " ~~~ " + footer + " ~~~\n"); err != nil {
