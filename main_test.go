@@ -80,3 +80,40 @@ new line 2
 		})
 	}
 }
+
+func TestAggregateConfigs(t *testing.T) {
+	tests := []struct {
+		name    string
+		configs []config
+		want    []config
+	}{
+		{
+			name: "combine",
+			configs: []config{
+				{
+					Comment: "#",
+					Path:    "/tmp/test",
+					Append:  "line 1\n",
+				},
+				{
+					Comment: "//",
+					Path:    "/tmp/test",
+					Append:  "line 2\n",
+				},
+			},
+			want: []config{
+				{
+					Comment: "#",
+					Path:    "/tmp/test",
+					Append:  "line 1\nline 2\n",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := aggregateConfigs(tt.configs)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
