@@ -35,3 +35,14 @@ our_key=5421
 our_key=5431
 our_key=5441
 """
+
+[[config]]
+name = "testfile truncate"
+path = "testfiles/testfile_truncate"
+truncate = true
+comment_symbol = "#"
+append = """
+my_key=42
+my_key=43
+my_key=44
+"""

@@ -3,6 +3,8 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -81,7 +83,9 @@ func main() {
 	}
 
 	if !*noConfig {
-		modifyFiles(configs)
+		if err := modifyFiles(configs); err != nil {
+			log.Fatalln(err)
+		}
 	}
 }
 
@@ -157,7 +161,7 @@ func aggregateConfigs(configs []config) []config {
 	return aggregated
 }
 
-func modifyFiles(configs []config) {
+func modifyFiles(configs []config) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -168,48 +172,63 @@ func modifyFiles(configs []config) {
 
 		targetFile, err := os.OpenFile(cfg.Path, flag, 0o666)
 		if err != nil {
-			log.Fatalf("failed reading target file (%v): %v\n", cfg.Path, err)
+			return fmt.Errorf("failed reading target file (%v): %v", cfg.Path, err)
 		}
 		defer targetFile.Close()
 
-		newContent := strings.Builder{}
-
-		scanner := bufio.NewScanner(targetFile)
-		skip := false
-		for scanner.Scan() {
-			if strings.Contains(scanner.Text(), header) {
-				skip = true
-			}
-
-			if strings.Contains(scanner.Text(), footer) {
-				skip = false
-				continue
-			}
-
-			if skip {
-				continue
-			}
-
-			newContent.Write(scanner.Bytes())
-			newContent.WriteByte('\n')
+		newContent, err := appendContent(targetFile, cfg.Comment, cfg.Append, time.Now())
+		if err != nil {
+			return fmt.Errorf("failed appending new content: %w", err)
 		}
 
-		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
-		}
-
-		if _, err := newContent.WriteString(cfg.Comment + " ~~~ " + header + " ~~~\n" + cfg.Comment + " " + time.Now().Format(time.RFC1123) + "\n"); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := newContent.WriteString(strings.TrimSuffix(cfg.Append, "\n")); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := newContent.WriteString("\n" + cfg.Comment + " ~~~ " + footer + " ~~~\n"); err != nil {
-			log.Fatalln(err)
-		}
-
-		if err := os.WriteFile(cfg.Path, []byte(newContent.String()), os.ModePerm); err != nil {
-			log.Fatalf("failed writing target file (%v): %v\n", cfg.Path, err)
+		if err := os.WriteFile(cfg.Path, []byte(newContent), os.ModePerm); err != nil {
+			return fmt.Errorf("failed writing target file (%v): %v", cfg.Path, err)
 		}
 	}
+	return nil
+}
+
+func appendContent(reader io.Reader, comment, appendText string, now time.Time) (string, error) {
+	newContent := strings.Builder{}
+
+	scanner := bufio.NewScanner(reader)
+	skip := false
+	for scanner.Scan() {
+		if strings.Contains(scanner.Text(), header) {
+			skip = true
+		}
+
+		if strings.Contains(scanner.Text(), footer) {
+			skip = false
+			continue
+		}
+
+		if skip {
+			continue
+		}
+
+		newContent.Write(scanner.Bytes())
+		newContent.WriteByte('\n')
+	}
+
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+
+	// Add blank line before confible part
+	if !strings.HasSuffix(newContent.String(), "\n\n") {
+		newContent.WriteByte('\n')
+	}
+
+	if _, err := newContent.WriteString(comment + " ~~~ " + header + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
+		return "", err
+	}
+	if _, err := newContent.WriteString(strings.TrimSuffix(appendText, "\n")); err != nil {
+		return "", err
+	}
+	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + footer + " ~~~\n"); err != nil {
+		return "", err
+	}
+
+	return newContent.String(), nil
 }
