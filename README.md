@@ -4,6 +4,28 @@ Confible is a simple configuration tool for your local machine.
 
 When configs are applied, a boundary header and footer are added which allows executing the configs multiple times or adjusting them and the target file will only contain the latest version of your desired configuration without the need of removing old modifications first.
 
+## Installation
+
+### Precompiled Binaries
+
+See the [releases](https://github.com/sj14/confible/releases) page for precompiled binaries.
+
+### Homebrew
+
+Using the [Homebrew](https://brew.sh/) package manager for macOS:
+
+```bash
+brew install sj14/tap/confible
+```
+
+### Manually
+
+It's also possible to install the latest release with `go install`:
+
+```bash
+go install github.com/sj14/confible
+```
+
 ## Usage
 
 ```bash
