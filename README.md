@@ -62,8 +62,8 @@ filetype indent plugin on
 """
 ```
 
-Beside the `yo` and `yoyo` outputs from the `[[commands]]` section, the `[[config]]` section will result into the below shown `zshrc` file.  
-Feel free to adjust the config and rerun `confible` for updating the `zshrc` to the latest version.
+Beside the `yo` and `yoyo` outputs from the `[[commands]]` section, the `[[config]]` section will result into the below shown `.vimrc` file.  
+Feel free to adjust the config and rerun `confible` for updating the `.vimrc` to the latest version.
 
 ```text
 ...
@@ -93,7 +93,7 @@ exec = [
 [[config]]
 name = "adjust my config" # optional
 path = "file/to/target"
-truncate = false # enable for erasing target file beforehand (optional)
+truncate = false      # enable for erasing target file beforehand (optional)
 comment_symbol = "//" # symbol which is recognized as a comment by the target file
 append = """
 what you want to add
