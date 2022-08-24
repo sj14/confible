@@ -12,6 +12,7 @@ import (
 func TestAppendContent(t *testing.T) {
 	type args struct {
 		reader     io.Reader
+		id         string
 		comment    string
 		appendText string
 		now        time.Time
@@ -26,17 +27,18 @@ func TestAppendContent(t *testing.T) {
 			name: "untouched file",
 			args: args{
 				reader:     bytes.NewBufferString("first line\nsecond line"),
+				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START ~~~
+// ~~~ CONFIBLE START id: "123" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END ~~~
+// ~~~ CONFIBLE END id: "123" ~~~
 `,
 		},
 		{
@@ -46,13 +48,14 @@ new line 2
 first line
 second line
 
-// ~~~ CONFIBLE START ~~~
+// ~~~ CONFIBLE START id: "123" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 existing line 1
 existing line 2
 existing line 3
-// ~~~ CONFIBLE END ~~~
+// ~~~ CONFIBLE END id: "123" ~~~
 `),
+				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
@@ -60,17 +63,17 @@ existing line 3
 first line
 second line
 
-// ~~~ CONFIBLE START ~~~
+// ~~~ CONFIBLE START id: "123" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END ~~~
+// ~~~ CONFIBLE END id: "123" ~~~
 `,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := appendContent(tt.args.reader, tt.args.comment, tt.args.appendText, tt.args.now)
+			got, err := appendContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendContent() error = %v, wantErr %v", err, tt.wantErr)
 				return

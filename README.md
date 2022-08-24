@@ -43,11 +43,13 @@ Usage of confible:
 ## Example
 
 ```toml
+id = "some unique identifier"
+
 [[commands]]
 name = "test commands"
 exec = [
-    "echo yo", 
-    "echo yoyo",
+    "echo hello", 
+    "echo world",
 ]
 
 [[config]]
@@ -62,7 +64,7 @@ filetype indent plugin on
 """
 ```
 
-Beside the `yo` and `yoyo` outputs from the `[[commands]]` section, the `[[config]]` section will result into the below shown `.vimrc` file.  
+Beside the `hello` and `world` outputs from the `[[commands]]` section, the `[[config]]` section will result into the below shown `.vimrc` file.  
 Feel free to adjust the config and rerun `confible` for updating the `.vimrc` to the latest version.
 
 ```text
@@ -70,19 +72,20 @@ Feel free to adjust the config and rerun `confible` for updating the `.vimrc` to
 content not handled by confible
 ...
 
-" ~~~ CONFIBLE START ~~~
+" ~~~ CONFIBLE START id: "some unique identifier" ~~~
 " Wed, 10 Mar 2021 22:10:04 CET
 set number
 syntax on
 set ruler
 filetype indent plugin on
-
-" ~~~ CONFIBLE END ~~~
+" ~~~ CONFIBLE END id: "some unique identifier" ~~~
 ```
 
 ## Config Specification
 
 ```toml
+id = "some unique identifier" # the ID allows to execute different configs to the same path 
+
 [[commands]]
 name = "test commands"
 exec = [
