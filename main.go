@@ -16,6 +16,13 @@ import (
 	toml "github.com/pelletier/go-toml/v2"
 )
 
+var (
+	// will be replaced during the build process
+	version = "undefined"
+	commit  = "undefined"
+	date    = "undefined"
+)
+
 type confibleFile struct {
 	ID       string    `toml:"id"`
 	Configs  []config  `toml:"config"`
@@ -42,10 +49,18 @@ const (
 
 func main() {
 	var (
-		noCommands = flag.Bool("no-cmd", false, "do not exec any commands")
-		noConfig   = flag.Bool("no-cfg", false, "do not apply any configs")
+		noCommands  = flag.Bool("no-cmd", false, "do not exec any commands")
+		noConfig    = flag.Bool("no-cfg", false, "do not apply any configs")
+		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Printf("version: %v\n", version)
+		fmt.Printf("commit: %v\n", commit)
+		fmt.Printf("date: %v\n", date)
+		os.Exit(0)
+	}
 
 	if flag.NArg() < 1 {
 		log.Fatalln("need a config file")
