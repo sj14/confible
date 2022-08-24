@@ -13,10 +13,11 @@ import (
 	"strings"
 	"time"
 
-	toml "github.com/pelletier/go-toml"
+	toml "github.com/pelletier/go-toml/v2"
 )
 
 type confibleFile struct {
+	ID       string    `toml:"id"`
 	Configs  []config  `toml:"config"`
 	Commands []command `toml:"commands"`
 }
@@ -50,15 +51,13 @@ func main() {
 		log.Fatalln("need a config file")
 	}
 
-	var configs []config
-	handledPaths := make(map[string]struct{})
+	if err := processConfigs(flag.Args(), *noCommands, *noConfig); err != nil {
+		log.Fatalln(err)
+	}
+}
 
-	for _, configPath := range flag.Args() {
-		// check if the same config file would be applied multiple times
-		if _, ok := handledPaths[configPath]; ok {
-			continue
-		}
-		handledPaths[configPath] = struct{}{}
+func processConfigs(configPaths []string, noCommands, noConfig bool) error {
+	for _, configPath := range configPaths {
 		log.Printf("parsing config %v\n", configPath)
 
 		configFile, err := os.Open(configPath)
@@ -67,26 +66,28 @@ func main() {
 		}
 
 		dec := toml.NewDecoder(configFile)
-		dec.Strict(true)
+		dec.DisallowUnknownFields()
 
 		config := confibleFile{}
 		if err := dec.Decode(&config); err != nil {
-			log.Fatalf("failed unmarshalling config file: %v\n", err)
+			return fmt.Errorf("failed unmarshalling config file: %v", err)
 		}
 
-		// Aggregate all configs before appending
-		configs = append(configs, config.Configs...)
+		if config.ID == "" {
+			return fmt.Errorf("missing ID for %q", configPath)
+		}
 
-		if !*noCommands {
+		if !noCommands {
 			execCmds(config.Commands)
 		}
-	}
 
-	if !*noConfig {
-		if err := modifyFiles(configs); err != nil {
-			log.Fatalln(err)
+		if !noConfig {
+			if err := modifyTargetFiles(config.ID, config.Configs); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // split on spaces except when inside quotes
@@ -161,7 +162,7 @@ func aggregateConfigs(configs []config) []config {
 	return aggregated
 }
 
-func modifyFiles(configs []config) error {
+func modifyTargetFiles(id string, configs []config) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -176,7 +177,7 @@ func modifyFiles(configs []config) error {
 		}
 		defer targetFile.Close()
 
-		newContent, err := appendContent(targetFile, cfg.Comment, cfg.Append, time.Now())
+		newContent, err := appendContent(targetFile, id, cfg.Comment, cfg.Append, time.Now())
 		if err != nil {
 			return fmt.Errorf("failed appending new content: %w", err)
 		}
@@ -188,17 +189,21 @@ func modifyFiles(configs []config) error {
 	return nil
 }
 
-func appendContent(reader io.Reader, comment, appendText string, now time.Time) (string, error) {
-	newContent := strings.Builder{}
+func appendContent(reader io.Reader, id, comment, appendText string, now time.Time) (string, error) {
+	var (
+		newContent   = strings.Builder{}
+		headerWithID = fmt.Sprintf(header+" id: %q", id)
+		footerWithID = fmt.Sprintf(footer+" id: %q", id)
+	)
 
 	scanner := bufio.NewScanner(reader)
 	skip := false
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), header) {
+		if strings.Contains(scanner.Text(), headerWithID) {
 			skip = true
 		}
 
-		if strings.Contains(scanner.Text(), footer) {
+		if strings.Contains(scanner.Text(), footerWithID) {
 			skip = false
 			continue
 		}
@@ -220,13 +225,13 @@ func appendContent(reader io.Reader, comment, appendText string, now time.Time) 
 		newContent.WriteByte('\n')
 	}
 
-	if _, err := newContent.WriteString(comment + " ~~~ " + header + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
+	if _, err := newContent.WriteString(comment + " ~~~ " + headerWithID + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
 		return "", err
 	}
 	if _, err := newContent.WriteString(strings.TrimSuffix(appendText, "\n")); err != nil {
 		return "", err
 	}
-	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + footer + " ~~~\n"); err != nil {
+	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + footerWithID + " ~~~\n"); err != nil {
 		return "", err
 	}
 

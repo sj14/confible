@@ -1,3 +1,5 @@
+id = "file2"
+
 [[commands]]
 name = "test commands"
 exec = [
