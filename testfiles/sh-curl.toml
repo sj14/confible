@@ -1,0 +1,8 @@
+id = "zsh"
+
+# zsh stuff
+[[commands]]
+name = "oh-my-zsh"
+exec = [
+    'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"',
+]
