@@ -186,17 +186,25 @@ func modifyTargetFiles(id string, configs []config) error {
 			flag = os.O_CREATE | os.O_TRUNC
 		}
 
+		// create folder for the target file if it doesn't exist
+		if err := os.MkdirAll(filepath.Dir(cfg.Path), 0o755); err != nil {
+			return fmt.Errorf("failed creating target folder (%v): %v", cfg.Path, err)
+		}
+
+		// open the target file (doesn't create the folder when it doesn't exit)
 		targetFile, err := os.OpenFile(cfg.Path, flag, 0o666)
 		if err != nil {
 			return fmt.Errorf("failed reading target file (%v): %v", cfg.Path, err)
 		}
 		defer targetFile.Close()
 
+		// process new file content
 		newContent, err := appendContent(targetFile, id, cfg.Comment, cfg.Append, time.Now())
 		if err != nil {
 			return fmt.Errorf("failed appending new content: %w", err)
 		}
 
+		// write content to the file
 		if err := os.WriteFile(cfg.Path, []byte(newContent), os.ModePerm); err != nil {
 			return fmt.Errorf("failed writing target file (%v): %v", cfg.Path, err)
 		}
@@ -211,13 +219,16 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 		footerWithID = fmt.Sprintf(footer+" id: %q", id)
 	)
 
+	// read the already existing file content
 	scanner := bufio.NewScanner(reader)
 	skip := false
 	for scanner.Scan() {
+		// we reached our own old config, do not copy our old config
 		if strings.Contains(scanner.Text(), headerWithID) {
 			skip = true
 		}
 
+		// our config was read, continue copying the other content
 		if strings.Contains(scanner.Text(), footerWithID) {
 			skip = false
 			continue
@@ -227,25 +238,31 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 			continue
 		}
 
-		newContent.Write(scanner.Bytes())
-		newContent.WriteByte('\n')
+		if _, err := newContent.Write(scanner.Bytes()); err != nil {
+			return "", err
+		}
+		if err := newContent.WriteByte('\n'); err != nil {
+			return "", err
+		}
 	}
-
 	if err := scanner.Err(); err != nil {
 		return "", err
 	}
 
-	// Add blank line before confible part
-	if !strings.HasSuffix(newContent.String(), "\n\n") {
+	// Add blank line before confible part (only when the target file is not empty)
+	if strings.TrimSpace(newContent.String()) != "" && !strings.HasSuffix(newContent.String(), "\n\n") {
 		newContent.WriteByte('\n')
 	}
 
+	// header
 	if _, err := newContent.WriteString(comment + " ~~~ " + headerWithID + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
 		return "", err
 	}
+	// config
 	if _, err := newContent.WriteString(strings.TrimSuffix(appendText, "\n")); err != nil {
 		return "", err
 	}
+	// footer
 	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + footerWithID + " ~~~\n"); err != nil {
 		return "", err
 	}

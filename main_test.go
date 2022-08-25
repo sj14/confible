@@ -24,6 +24,21 @@ func TestAppendContent(t *testing.T) {
 		wantErr bool
 	}{
 		{
+			name: "empty file",
+			args: args{
+				reader:     bytes.NewBufferString(""),
+				id:         "123",
+				comment:    "//",
+				appendText: "new line 1\nnew line 2",
+			},
+			want: `// ~~~ CONFIBLE START id: "123" ~~~
+// Mon, 01 Jan 0001 00:00:00 UTC
+new line 1
+new line 2
+// ~~~ CONFIBLE END id: "123" ~~~
+`,
+		},
+		{
 			name: "untouched file",
 			args: args{
 				reader:     bytes.NewBufferString("first line\nsecond line"),
