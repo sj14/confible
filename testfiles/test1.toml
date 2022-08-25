@@ -1,14 +1,12 @@
 id = "file1"
 
 [[commands]]
-name = "test commands"
 exec = [
     'sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"',
     "echo yoyo",
 ]
 
 [[config]]
-name = "testfile 1"
 path = "testfiles/testfile"
 #truncate = true
 comment_symbol = "#"
@@ -19,7 +17,6 @@ my_key=44
 """
 
 [[config]]
-name = "testfile 1x2"
 path = "testfiles/testfile"
 comment_symbol = "$$$"
 append = """
@@ -29,7 +26,6 @@ your_key=441
 """
 
 [[config]]
-name = "testfile 2"
 path = "testfiles/testfile2"
 comment_symbol = "$$$"
 append = """
@@ -39,7 +35,6 @@ our_key=5441
 """
 
 [[config]]
-name = "testfile truncate"
 path = "testfiles/testfile_truncate"
 truncate = true
 comment_symbol = "#"

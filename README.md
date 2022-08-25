@@ -43,17 +43,15 @@ Usage of confible:
 ## Example
 
 ```toml
-id = "some unique identifier"
+id = "vimrc"
 
 [[commands]]
-name = "test commands"
 exec = [
     "echo hello", 
     "echo world",
 ]
 
 [[config]]
-name = "modify vimrc"
 path = "~/.vimrc"
 comment_symbol = "\""
 append = """
@@ -72,13 +70,13 @@ Feel free to adjust the config and rerun `confible` for updating the `.vimrc` to
 content not handled by confible
 ...
 
-" ~~~ CONFIBLE START id: "some unique identifier" ~~~
+" ~~~ CONFIBLE START id: "vimrc" ~~~
 " Wed, 10 Mar 2021 22:10:04 CET
 set number
 syntax on
 set ruler
 filetype indent plugin on
-" ~~~ CONFIBLE END id: "some unique identifier" ~~~
+" ~~~ CONFIBLE END id: "vimrc" ~~~
 ```
 
 ## Config Specification
@@ -87,15 +85,13 @@ filetype indent plugin on
 id = "some unique identifier" # the ID allows to execute different configs to the same path 
 
 [[commands]]
-name = "test commands"
 exec = [
     "echo yo", 
     "echo yoyo",
 ]
 
 [[config]]
-name = "adjust my config" # optional
-path = "file/to/target"
+path = "path/to/target"
 truncate = false      # enable for erasing target file beforehand (optional)
 comment_symbol = "//" # symbol which is recognized as a comment by the target file
 append = """

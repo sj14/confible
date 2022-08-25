@@ -29,7 +29,6 @@ type confibleFile struct {
 }
 
 type config struct {
-	Name     string `toml:"name"`
 	Path     string `toml:"path"`
 	Truncate bool   `toml:"truncate"`
 	Comment  string `toml:"comment_symbol"`
@@ -37,7 +36,6 @@ type config struct {
 }
 
 type command struct {
-	Name string   `toml:"name"`
 	Exec []string `toml:"exec"`
 }
 
@@ -72,7 +70,7 @@ func main() {
 
 func processConfigs(configPaths []string, noCommands, noConfig bool) error {
 	for _, configPath := range configPaths {
-		log.Printf("parsing config %v\n", configPath)
+		log.Printf("processing config %v\n", configPath)
 
 		configFile, err := os.Open(configPath)
 		if err != nil {
@@ -110,8 +108,6 @@ func execCmds(commands []command) {
 			c := exec.Command("sh", "-c", cmd)
 			c.Stderr = os.Stderr
 			c.Stdout = os.Stdout
-
-			log.Printf("[%v] running: %v\n", commands.Name, cmd)
 
 			if err := c.Run(); err != nil {
 				log.Fatalf("failed running command '%v': %v\n", cmd, err)
@@ -153,10 +149,10 @@ func aggregateConfigs(configs []config) []config {
 		// aggregate with existing config path
 		old := configsMap[cfg.Path]
 		if old.Comment != cfg.Comment {
-			log.Printf("multiple comment styles for %q (%v) and %q (%v) using %v\n", old.Name, old.Comment, cfg.Name, cfg.Comment, old.Comment)
+			log.Printf("multiple comment styles for %q (%q and %q) using %q\n", cfg.Path, old.Comment, cfg.Comment, old.Comment)
 		}
 		if old.Truncate != cfg.Truncate {
-			log.Fatalf("file should be truncated and not '%v' \n", old.Path)
+			log.Fatalf("%q should be truncated and also not be truncated\n", cfg.Path)
 		}
 
 		old.Append += cfg.Append
