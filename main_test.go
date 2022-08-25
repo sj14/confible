@@ -85,6 +85,40 @@ new line 2
 // ~~~ CONFIBLE END id: "123" ~~~
 `,
 		},
+		{
+			name: "config with other id",
+			args: args{
+				reader: bytes.NewBufferString(`
+first line
+second line
+
+// ~~~ CONFIBLE START id: "another config" ~~~
+// Mon, 01 Jan 0001 00:00:00 UTC
+That's not your config yo!
+Just leave me here!
+// ~~~ CONFIBLE END id: "another config" ~~~
+`),
+				id:         "123",
+				comment:    "//",
+				appendText: "new line 1\nnew line 2",
+			},
+			want: `
+first line
+second line
+
+// ~~~ CONFIBLE START id: "another config" ~~~
+// Mon, 01 Jan 0001 00:00:00 UTC
+That's not your config yo!
+Just leave me here!
+// ~~~ CONFIBLE END id: "another config" ~~~
+
+// ~~~ CONFIBLE START id: "123" ~~~
+// Mon, 01 Jan 0001 00:00:00 UTC
+new line 1
+new line 2
+// ~~~ CONFIBLE END id: "123" ~~~
+`,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
