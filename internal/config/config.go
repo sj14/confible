@@ -168,6 +168,23 @@ func generateFooterWithID(id string) string {
 	return fmt.Sprintf(footer+" id: %q", id)
 }
 
+type envMap map[string]string
+
+type templateData struct {
+	Env envMap
+}
+
+func getEnvMap() envMap {
+	envMap := make(envMap)
+
+	for _, environ := range os.Environ() {
+		keyValue := strings.SplitN(environ, "=", 2)
+		envMap[keyValue[0]] = keyValue[1]
+	}
+
+	return envMap
+}
+
 func modifyContent(reader io.Reader, id, comment, appendText string, now time.Time) (string, error) {
 	content, err := fileContentWithoutConfiblePartOfID(reader, id)
 	if err != nil {
@@ -191,19 +208,8 @@ func modifyContent(reader io.Reader, id, comment, appendText string, now time.Ti
 		return "", err
 	}
 
-	// config
-	type templateData = struct {
-		Env map[string]string
-	}
-
-	envMap := make(map[string]string)
-
-	for _, environ := range os.Environ() {
-		keyValue := strings.SplitN(environ, "=", 2)
-		envMap[keyValue[0]] = keyValue[1]
-	}
-
-	td := templateData{Env: envMap}
+	// template config
+	td := templateData{Env: getEnvMap()}
 
 	templ, err := template.New("").Parse(strings.TrimSpace(appendText))
 	if err != nil {
