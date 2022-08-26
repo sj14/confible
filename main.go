@@ -28,6 +28,7 @@ func main() {
 	var (
 		noCommands  = flag.Bool("no-cmd", false, "do not exec any commands")
 		noConfig    = flag.Bool("no-cfg", false, "do not apply any configs")
+		clean       = flag.Bool("clean", false, "remove the config from the targets")
 		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
@@ -39,31 +40,29 @@ func main() {
 		os.Exit(0)
 	}
 
-	if flag.NArg() < 2 {
-		log.Fatalln("need a config file")
+	if flag.NArg() < 1 {
+		log.Fatalln("need at least one config file")
 	}
 
-	switch flag.Arg(0) {
-	case "apply":
-		if err := processConfibleFiles(flag.Args()[1:], *noCommands, *noConfig, config.ModeAppend); err != nil {
+	if *clean {
+		if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeClean); err != nil {
 			log.Fatalln(err)
 		}
-	case "clean":
-		if err := processConfibleFiles(flag.Args()[1:], *noCommands, *noConfig, config.ModeClean); err != nil {
-			log.Fatalln(err)
-		}
-	default:
-		log.Fatalln("missing 'apply' or 'clean' command")
+		return
+	}
+
+	if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeAppend); err != nil {
+		log.Fatalln(err)
 	}
 }
 
 func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode uint8) error {
 	for _, configPath := range configPaths {
-		log.Printf("processing config %v\n", configPath)
+		log.Printf("processing config %q\n", configPath)
 
 		configFile, err := os.Open(configPath)
 		if err != nil {
-			log.Fatalf("failed reading config (%v): %v\n", configPath, err)
+			log.Fatalf("failed reading config %q: %v\n", configPath, err)
 		}
 
 		dec := toml.NewDecoder(configFile)
