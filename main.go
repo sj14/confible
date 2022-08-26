@@ -60,16 +60,26 @@ func main() {
 		os.Exit(0)
 	}
 
-	if flag.NArg() < 1 {
+	if flag.NArg() < 2 {
 		log.Fatalln("need a config file")
 	}
 
-	if err := processConfigs(flag.Args(), *noCommands, *noConfig); err != nil {
-		log.Fatalln(err)
+	switch flag.Arg(0) {
+	case "apply":
+		if err := processConfigs(flag.Args()[1:], *noCommands, *noConfig, modeAppend); err != nil {
+			log.Fatalln(err)
+		}
+	case "clean":
+		if err := processConfigs(flag.Args()[1:], *noCommands, *noConfig, modeClean); err != nil {
+			log.Fatalln(err)
+		}
+	default:
+		log.Fatalln("missing 'apply' or 'clean' command")
 	}
+
 }
 
-func processConfigs(configPaths []string, noCommands, noConfig bool) error {
+func processConfigs(configPaths []string, noCommands, noConfig bool, mode uint8) error {
 	for _, configPath := range configPaths {
 		log.Printf("processing config %v\n", configPath)
 
@@ -90,12 +100,12 @@ func processConfigs(configPaths []string, noCommands, noConfig bool) error {
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
 
-		if !noCommands {
+		if !noCommands && mode == modeAppend {
 			execCmds(config.Commands)
 		}
 
 		if !noConfig {
-			if err := modifyTargetFiles(config.ID, config.Configs); err != nil {
+			if err := modifyTargetFiles(config.ID, config.Configs, mode); err != nil {
 				return err
 			}
 		}
@@ -168,7 +178,12 @@ func aggregateConfigs(configs []config) []config {
 	return aggregated
 }
 
-func modifyTargetFiles(id string, configs []config) error {
+const (
+	modeAppend uint8 = iota
+	modeClean
+)
+
+func modifyTargetFiles(id string, configs []config, mode uint8) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -190,9 +205,18 @@ func modifyTargetFiles(id string, configs []config) error {
 		defer targetFile.Close()
 
 		// process new file content
-		newContent, err := appendContent(targetFile, id, cfg.Comment, cfg.Append, time.Now())
-		if err != nil {
-			return fmt.Errorf("failed appending new content: %w", err)
+		var newContent string
+		switch mode {
+		case modeAppend:
+			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, time.Now())
+			if err != nil {
+				return fmt.Errorf("failed appending new content: %w", err)
+			}
+		case modeClean:
+			newContent, err = fileContentWithoutConfiblePartOfID(targetFile, id)
+			if err != nil {
+				return fmt.Errorf("failed cleaning config: %w", err)
+			}
 		}
 
 		// write content to the file
@@ -203,24 +227,20 @@ func modifyTargetFiles(id string, configs []config) error {
 	return nil
 }
 
-func appendContent(reader io.Reader, id, comment, appendText string, now time.Time) (string, error) {
-	var (
-		newContent   = strings.Builder{}
-		headerWithID = fmt.Sprintf(header+" id: %q", id)
-		footerWithID = fmt.Sprintf(footer+" id: %q", id)
-	)
+func fileContentWithoutConfiblePartOfID(reader io.Reader, id string) (string, error) {
+	content := strings.Builder{}
 
 	// read the already existing file content
 	scanner := bufio.NewScanner(reader)
 	skip := false
 	for scanner.Scan() {
 		// we reached our own old config, do not copy our old config
-		if strings.Contains(scanner.Text(), headerWithID) {
+		if strings.Contains(scanner.Text(), generateHeaderWithID(id)) {
 			skip = true
 		}
 
 		// our config was read, continue copying the other content
-		if strings.Contains(scanner.Text(), footerWithID) {
+		if strings.Contains(scanner.Text(), generateFooterWithID(id)) {
 			skip = false
 			continue
 		}
@@ -229,10 +249,10 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 			continue
 		}
 
-		if _, err := newContent.Write(scanner.Bytes()); err != nil {
+		if _, err := content.Write(scanner.Bytes()); err != nil {
 			return "", err
 		}
-		if err := newContent.WriteByte('\n'); err != nil {
+		if err := content.WriteByte('\n'); err != nil {
 			return "", err
 		}
 	}
@@ -240,21 +260,41 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 		return "", err
 	}
 
+	return strings.TrimSpace(content.String()), nil
+}
+
+func generateHeaderWithID(id string) string {
+	return fmt.Sprintf(header+" id: %q", id)
+}
+
+func generateFooterWithID(id string) string {
+	return fmt.Sprintf(footer+" id: %q", id)
+}
+
+func modifyContent(reader io.Reader, id, comment, appendText string, now time.Time) (string, error) {
+	content, err := fileContentWithoutConfiblePartOfID(reader, id)
+	if err != nil {
+		return "", err
+	}
+
+	var newContent = strings.Builder{}
+	if _, err = newContent.WriteString(content); err != nil {
+		return "", err
+	}
+
 	// Add blank line before confible part (only when the target file is not empty)
-	if strings.TrimSpace(newContent.String()) != "" && !strings.HasSuffix(newContent.String(), "\n\n") {
-		clean := strings.TrimSpace(newContent.String())
-		newContent.Reset()
-		if _, err := newContent.WriteString(clean + "\n\n"); err != nil {
+	if strings.TrimSpace(newContent.String()) != "" {
+		if _, err := newContent.WriteString("\n\n"); err != nil {
 			return "", err
 		}
 	}
 
 	// header
-	if _, err := newContent.WriteString(comment + " ~~~ " + headerWithID + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
+	if _, err := newContent.WriteString(comment + " ~~~ " + generateHeaderWithID(id) + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
 		return "", err
 	}
-	// config
 
+	// config
 	type templateData = struct {
 		Env map[string]string
 	}
@@ -278,7 +318,8 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 		return "", fmt.Errorf("failed executing the template: %w", err)
 	}
 
-	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + footerWithID + " ~~~\n"); err != nil {
+	// footer
+	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + generateFooterWithID(id) + " ~~~\n"); err != nil {
 		return "", err
 	}
 
