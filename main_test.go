@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"io"
+	"os"
 	"testing"
 	"time"
 
@@ -18,11 +19,32 @@ func TestAppendContent(t *testing.T) {
 		now        time.Time
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
+		name        string
+		customSetup func()
+		args        args
+		want        string
+		wantErr     bool
 	}{
+		{
+			name: "templating",
+			customSetup: func() {
+				err := os.Setenv("TEST_ENV", "YOLO!!1")
+				require.Nil(t, err)
+			},
+			args: args{
+				reader:     bytes.NewBufferString(""),
+				id:         "123",
+				comment:    "//",
+				appendText: "new line 1\n{{ .Env.TEST_ENV }}\nnew line 2",
+			},
+			want: `// ~~~ CONFIBLE START id: "123" ~~~
+// Mon, 01 Jan 0001 00:00:00 UTC
+new line 1
+YOLO!!1
+new line 2
+// ~~~ CONFIBLE END id: "123" ~~~
+`,
+		},
 		{
 			name: "empty file",
 			args: args{
@@ -102,8 +124,7 @@ Just leave me here!
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
-			want: `
-first line
+			want: `first line
 second line
 
 // ~~~ CONFIBLE START id: "another config" ~~~
@@ -122,6 +143,10 @@ new line 2
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.customSetup != nil {
+				tt.customSetup()
+			}
+
 			got, err := appendContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendContent() error = %v, wantErr %v", err, tt.wantErr)

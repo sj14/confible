@@ -79,6 +79,19 @@ filetype indent plugin on
 " ~~~ CONFIBLE END id: "vimrc" ~~~
 ```
 
+## Templates
+
+You can include environment variables in configs using `{{ .Env.VARIABLE_NAME }}`.
+
+```toml
+[[config]]
+path = "~/test.conf"
+comment_symbol = "#"
+append = """
+My home dir is {{ .Env.HOME }}.
+"""
+```
+
 ## Config Specification
 
 ```toml

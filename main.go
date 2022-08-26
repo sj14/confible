@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	toml "github.com/pelletier/go-toml/v2"
@@ -241,7 +242,11 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 
 	// Add blank line before confible part (only when the target file is not empty)
 	if strings.TrimSpace(newContent.String()) != "" && !strings.HasSuffix(newContent.String(), "\n\n") {
-		newContent.WriteByte('\n')
+		clean := strings.TrimSpace(newContent.String())
+		newContent.Reset()
+		if _, err := newContent.WriteString(clean + "\n\n"); err != nil {
+			return "", err
+		}
 	}
 
 	// header
@@ -249,10 +254,30 @@ func appendContent(reader io.Reader, id, comment, appendText string, now time.Ti
 		return "", err
 	}
 	// config
-	if _, err := newContent.WriteString(strings.TrimSuffix(appendText, "\n")); err != nil {
-		return "", err
+
+	type templateData = struct {
+		Env map[string]string
 	}
-	// footer
+
+	envMap := make(map[string]string)
+
+	for _, environ := range os.Environ() {
+		keyValue := strings.SplitN(environ, "=", 2)
+		envMap[keyValue[0]] = keyValue[1]
+	}
+
+	td := templateData{Env: envMap}
+
+	templ, err := template.New("").Parse(strings.TrimSpace(appendText))
+	if err != nil {
+		return "", fmt.Errorf("failed parsing the template: %w", err)
+	}
+
+	err = templ.Execute(&newContent, td)
+	if err != nil {
+		return "", fmt.Errorf("failed executing the template: %w", err)
+	}
+
 	if _, err := newContent.WriteString("\n" + comment + " ~~~ " + footerWithID + " ~~~\n"); err != nil {
 		return "", err
 	}
