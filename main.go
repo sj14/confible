@@ -28,7 +28,7 @@ func main() {
 	var (
 		noCommands  = flag.Bool("no-cmd", false, "do not exec any commands")
 		noConfig    = flag.Bool("no-cfg", false, "do not apply any configs")
-		clean       = flag.Bool("clean", false, "remove the config from the targets")
+		clean       = flag.Bool("clean", false, "remove the config from the targets (ignores no-cmd and no-cfg flags)")
 		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
