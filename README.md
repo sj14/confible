@@ -28,16 +28,26 @@ go install github.com/sj14/confible
 
 ## Usage
 
-```bash
-confible [flags] <config.toml> [...]
+```console
+confible <COMMAND> [flags] <confible.toml> [...]
 ```
 
+Commands:
+
 ```text
-Usage of confible:
-  -no-cfg
-        do not apply any configs
-  -no-cmd
-        do not exec any commands
+apply
+  Apply the given confible file
+clean
+  Remove the config from the targets in the given confible file
+```
+
+Flags (only for the `apply` command):
+
+```text
+-no-cfg
+  do not apply any configs
+-no-cmd
+  do not exec any commands
 ```
 
 ## Example

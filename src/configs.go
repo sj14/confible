@@ -2,129 +2,26 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
-
-	toml "github.com/pelletier/go-toml/v2"
 )
-
-var (
-	// will be replaced during the build process
-	version = "undefined"
-	commit  = "undefined"
-	date    = "undefined"
-)
-
-type confibleFile struct {
-	ID       string    `toml:"id"`
-	Configs  []config  `toml:"config"`
-	Commands []command `toml:"commands"`
-}
-
-type config struct {
-	Path     string `toml:"path"`
-	Truncate bool   `toml:"truncate"`
-	Comment  string `toml:"comment_symbol"`
-	Append   string `toml:"append"`
-}
-
-type command struct {
-	Exec []string `toml:"exec"`
-}
 
 const (
 	header = "CONFIBLE START"
 	footer = "CONFIBLE END"
 )
 
-func main() {
-	var (
-		noCommands  = flag.Bool("no-cmd", false, "do not exec any commands")
-		noConfig    = flag.Bool("no-cfg", false, "do not apply any configs")
-		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
-	)
-	flag.Parse()
-
-	if *versionFlag {
-		fmt.Printf("version: %v\n", version)
-		fmt.Printf("commit: %v\n", commit)
-		fmt.Printf("date: %v\n", date)
-		os.Exit(0)
-	}
-
-	if flag.NArg() < 2 {
-		log.Fatalln("need a config file")
-	}
-
-	switch flag.Arg(0) {
-	case "apply":
-		if err := processConfigs(flag.Args()[1:], *noCommands, *noConfig, modeAppend); err != nil {
-			log.Fatalln(err)
-		}
-	case "clean":
-		if err := processConfigs(flag.Args()[1:], *noCommands, *noConfig, modeClean); err != nil {
-			log.Fatalln(err)
-		}
-	default:
-		log.Fatalln("missing 'apply' or 'clean' command")
-	}
-
-}
-
-func processConfigs(configPaths []string, noCommands, noConfig bool, mode uint8) error {
-	for _, configPath := range configPaths {
-		log.Printf("processing config %v\n", configPath)
-
-		configFile, err := os.Open(configPath)
-		if err != nil {
-			log.Fatalf("failed reading config (%v): %v\n", configPath, err)
-		}
-
-		dec := toml.NewDecoder(configFile)
-		dec.DisallowUnknownFields()
-
-		config := confibleFile{}
-		if err := dec.Decode(&config); err != nil {
-			return fmt.Errorf("failed unmarshalling config file: %v", err)
-		}
-
-		if config.ID == "" {
-			return fmt.Errorf("missing ID for %q", configPath)
-		}
-
-		if !noCommands && mode == modeAppend {
-			execCmds(config.Commands)
-		}
-
-		if !noConfig {
-			if err := modifyTargetFiles(config.ID, config.Configs, mode); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func execCmds(commands []command) {
-	for _, commands := range commands {
-		for _, cmd := range commands.Exec {
-			c := exec.Command("sh", "-c", cmd)
-			c.Stderr = os.Stderr
-			c.Stdout = os.Stdout
-
-			if err := c.Run(); err != nil {
-				log.Fatalf("failed running command '%v': %v\n", cmd, err)
-			}
-		}
-	}
+type config struct {
+	Path     string `toml:"path"`
+	Truncate bool   `toml:"truncate"`
+	Comment  string `toml:"comment_symbol"`
+	Append   string `toml:"append"`
 }
 
 // validate and aggregate configs which target the same file
