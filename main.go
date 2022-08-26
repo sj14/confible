@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/sj14/confible/internal/command"
+	"github.com/sj14/confible/internal/config"
 )
 
 var (
@@ -17,9 +19,9 @@ var (
 )
 
 type confibleFile struct {
-	ID       string    `toml:"id"`
-	Configs  []config  `toml:"config"`
-	Commands []command `toml:"commands"`
+	ID       string            `toml:"id"`
+	Configs  []config.Config   `toml:"config"`
+	Commands []command.Command `toml:"commands"`
 }
 
 func main() {
@@ -43,11 +45,11 @@ func main() {
 
 	switch flag.Arg(0) {
 	case "apply":
-		if err := processConfibleFiles(flag.Args()[1:], *noCommands, *noConfig, modeAppend); err != nil {
+		if err := processConfibleFiles(flag.Args()[1:], *noCommands, *noConfig, config.ModeAppend); err != nil {
 			log.Fatalln(err)
 		}
 	case "clean":
-		if err := processConfibleFiles(flag.Args()[1:], *noCommands, *noConfig, modeClean); err != nil {
+		if err := processConfibleFiles(flag.Args()[1:], *noCommands, *noConfig, config.ModeClean); err != nil {
 			log.Fatalln(err)
 		}
 	default:
@@ -67,21 +69,21 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 		dec := toml.NewDecoder(configFile)
 		dec.DisallowUnknownFields()
 
-		config := confibleFile{}
-		if err := dec.Decode(&config); err != nil {
+		cfg := confibleFile{}
+		if err := dec.Decode(&cfg); err != nil {
 			return fmt.Errorf("failed unmarshalling config file: %v", err)
 		}
 
-		if config.ID == "" {
+		if cfg.ID == "" {
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
 
-		if !noCommands && mode == modeAppend {
-			execCmds(config.Commands)
+		if !noCommands && mode == config.ModeAppend {
+			command.Exec(cfg.Commands)
 		}
 
 		if !noConfig {
-			if err := modifyTargetFiles(config.ID, config.Configs, mode); err != nil {
+			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, mode); err != nil {
 				return err
 			}
 		}

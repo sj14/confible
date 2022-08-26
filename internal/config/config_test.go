@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"bytes"
@@ -160,12 +160,12 @@ new line 2
 func TestAggregateConfigs(t *testing.T) {
 	tests := []struct {
 		name    string
-		configs []config
-		want    []config
+		configs []Config
+		want    []Config
 	}{
 		{
 			name: "combine",
-			configs: []config{
+			configs: []Config{
 				{
 					Comment: "#",
 					Path:    "/tmp/test",
@@ -177,7 +177,7 @@ func TestAggregateConfigs(t *testing.T) {
 					Append:  "line 2\n",
 				},
 			},
-			want: []config{
+			want: []Config{
 				{
 					Comment: "#",
 					Path:    "/tmp/test",

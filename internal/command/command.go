@@ -1,4 +1,4 @@
-package main
+package command
 
 import (
 	"log"
@@ -6,11 +6,11 @@ import (
 	"os/exec"
 )
 
-type command struct {
+type Command struct {
 	Exec []string `toml:"exec"`
 }
 
-func execCmds(commands []command) {
+func Exec(commands []Command) {
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
 			c := exec.Command("sh", "-c", cmd)

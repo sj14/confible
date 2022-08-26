@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"bufio"
@@ -17,7 +17,7 @@ const (
 	footer = "CONFIBLE END"
 )
 
-type config struct {
+type Config struct {
 	Path     string `toml:"path"`
 	Truncate bool   `toml:"truncate"`
 	Comment  string `toml:"comment_symbol"`
@@ -25,9 +25,9 @@ type config struct {
 }
 
 // validate and aggregate configs which target the same file
-func aggregateConfigs(configs []config) []config {
+func aggregateConfigs(configs []Config) []Config {
 	// the key is the path of the config file
-	configsMap := make(map[string]config)
+	configsMap := make(map[string]Config)
 
 	for _, cfg := range configs {
 		if cfg.Append == "" {
@@ -67,7 +67,7 @@ func aggregateConfigs(configs []config) []config {
 		configsMap[cfg.Path] = old
 	}
 
-	var aggregated []config
+	var aggregated []Config
 	for _, cfg := range configsMap {
 		aggregated = append(aggregated, cfg)
 	}
@@ -76,11 +76,11 @@ func aggregateConfigs(configs []config) []config {
 }
 
 const (
-	modeAppend uint8 = iota
-	modeClean
+	ModeAppend uint8 = iota
+	ModeClean
 )
 
-func modifyTargetFiles(id string, configs []config, mode uint8) error {
+func ModifyTargetFiles(id string, configs []Config, mode uint8) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -104,12 +104,12 @@ func modifyTargetFiles(id string, configs []config, mode uint8) error {
 		// process new file content
 		var newContent string
 		switch mode {
-		case modeAppend:
+		case ModeAppend:
 			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
-		case modeClean:
+		case ModeClean:
 			newContent, err = fileContentWithoutConfiblePartOfID(targetFile, id)
 			if err != nil {
 				return fmt.Errorf("failed cleaning config: %w", err)
