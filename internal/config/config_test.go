@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"bytes"
@@ -96,8 +96,7 @@ existing line 3
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
-			want: `
-first line
+			want: `first line
 second line
 
 // ~~~ CONFIBLE START id: "123" ~~~
@@ -147,7 +146,7 @@ new line 2
 				tt.customSetup()
 			}
 
-			got, err := appendContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, tt.args.now)
+			got, err := modifyContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendContent() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -161,12 +160,12 @@ new line 2
 func TestAggregateConfigs(t *testing.T) {
 	tests := []struct {
 		name    string
-		configs []config
-		want    []config
+		configs []Config
+		want    []Config
 	}{
 		{
 			name: "combine",
-			configs: []config{
+			configs: []Config{
 				{
 					Comment: "#",
 					Path:    "/tmp/test",
@@ -178,7 +177,7 @@ func TestAggregateConfigs(t *testing.T) {
 					Append:  "line 2\n",
 				},
 			},
-			want: []config{
+			want: []Config{
 				{
 					Comment: "#",
 					Path:    "/tmp/test",

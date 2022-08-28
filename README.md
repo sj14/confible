@@ -28,16 +28,20 @@ go install github.com/sj14/confible
 
 ## Usage
 
-```bash
+```console
 confible [flags] <config.toml> [...]
 ```
 
 ```text
-Usage of confible:
+ Usage of confible:
+  -clean
+        remove the config from the targets (ignores no-cmd and no-cfg flags)
   -no-cfg
         do not apply any configs
   -no-cmd
         do not exec any commands
+  -version
+        print version information
 ```
 
 ## Example

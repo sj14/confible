@@ -7,53 +7,21 @@ before:
     - go mod download
 builds:
   - main: ./main.go
-    id: "confible"
     env:
       - CGO_ENABLED=0
-      - GO111MODULE=on
     goos:
       - linux
       - darwin
       - windows
-    goarch:
-      - "386"
-      - amd64
-      - arm
-      - arm64
-
 archives:
-  - id: confible
-    builds:
-    - confible
-    wrap_in_directory: true
-    format_overrides:
-      - goos: windows
-        format: zip
-    files:
-      - LICENSE
-      - README.md
+  - format: binary
 checksum:
   name_template: "checksums.txt"
-
 snapshot:
   name_template: "{{ .Tag }}-next-{{.Commit}}"
-
-nfpms:
-  - maintainer: Simon Jürgensmeyyer <simon.juergensmeyer@gmail.com>
-    homepage: https://github.com/sj14/confible/
-    description: Confible is a simple configuration tool for your local machine.
-    license: MIT
-    formats:
-      - deb
-      - rpm
-    builds:
-      - confible
-
-
 brews:
   - name: confible
-    ids:
-      - confible
+    skip_upload: auto
     tap:
       owner: sj14
       name: homebrew-tap
@@ -65,8 +33,7 @@ release:
     name: confible
   disable: false
   draft: false
-  prerelease: false
-
+  prerelease: auto
 changelog:
   filters:
     exclude:
