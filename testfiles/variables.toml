@@ -1,0 +1,28 @@
+id = "variables"
+
+[[variables]]
+input = [
+    ["nick", "your nick name"],
+    ["age", "your age in years"],
+]
+exec = [
+    ["curDate", "date"],
+    ["something", "echo 'Hello World'"],
+]
+
+[[config]]
+path = "testfiles/variables"
+#truncate = true
+comment_symbol = "#"
+append = """
+my_key=42
+my_key=43
+my_key=44
+
+My User is: {{ .Env.USER }}
+My Nick is {{ .Var.nick}}
+I am {{ .Var.age}} years old
+Today is {{ .Var.curDate }}
+I want to say {{ .Var.something }}
+
+"""

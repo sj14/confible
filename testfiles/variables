@@ -1,0 +1,12 @@
+# ~~~ CONFIBLE START id: "variables" ~~~
+# Mon, 29 Aug 2022 15:44:41 CEST
+my_key=42
+my_key=43
+my_key=44
+
+My User is: simon
+My Nick is Simon
+I am 33 years old
+Today is Mo 29 Aug 2022 15:44:36 CEST
+I want to say Hello World
+# ~~~ CONFIBLE END id: "variables" ~~~

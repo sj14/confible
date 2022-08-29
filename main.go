@@ -9,6 +9,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/sj14/confible/internal/command"
 	"github.com/sj14/confible/internal/config"
+	"github.com/sj14/confible/internal/variable"
 )
 
 var (
@@ -19,9 +20,10 @@ var (
 )
 
 type confibleFile struct {
-	ID       string            `toml:"id"`
-	Configs  []config.Config   `toml:"config"`
-	Commands []command.Command `toml:"commands"`
+	ID        string              `toml:"id"`
+	Configs   []config.Config     `toml:"config"`
+	Commands  []command.Command   `toml:"commands"`
+	Variables []variable.Variable `toml:"variables"`
 }
 
 func main() {
@@ -82,7 +84,9 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 		}
 
 		if !noConfig {
-			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, mode); err != nil {
+			variableMap := variable.Parse(cfg.Variables)
+
+			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, variableMap, mode); err != nil {
 				return err
 			}
 		}

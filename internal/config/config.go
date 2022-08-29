@@ -80,7 +80,7 @@ const (
 	ModeClean
 )
 
-func ModifyTargetFiles(id string, configs []Config, mode uint8) error {
+func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode uint8) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -105,7 +105,7 @@ func ModifyTargetFiles(id string, configs []Config, mode uint8) error {
 		var newContent string
 		switch mode {
 		case ModeAppend:
-			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, time.Now())
+			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, variables, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
@@ -168,14 +168,15 @@ func generateFooterWithID(id string) string {
 	return fmt.Sprintf(footer+" id: %q", id)
 }
 
-type envMap map[string]string
+type stringMap map[string]string
 
 type templateData struct {
-	Env envMap
+	Env stringMap
+	Var stringMap
 }
 
-func getEnvMap() envMap {
-	envMap := make(envMap)
+func getEnvMap() stringMap {
+	envMap := make(stringMap)
 
 	for _, environ := range os.Environ() {
 		keyValue := strings.SplitN(environ, "=", 2)
@@ -185,7 +186,7 @@ func getEnvMap() envMap {
 	return envMap
 }
 
-func modifyContent(reader io.Reader, id, comment, appendText string, now time.Time) (string, error) {
+func modifyContent(reader io.Reader, id, comment, appendText string, variables stringMap, now time.Time) (string, error) {
 	content, err := fileContentWithoutConfiblePartOfID(reader, id)
 	if err != nil {
 		return "", err
@@ -209,7 +210,10 @@ func modifyContent(reader io.Reader, id, comment, appendText string, now time.Ti
 	}
 
 	// template config
-	td := templateData{Env: getEnvMap()}
+	td := templateData{
+		Env: getEnvMap(),
+		Var: variables,
+	}
 
 	templ, err := template.New("").Parse(strings.TrimSpace(appendText))
 	if err != nil {

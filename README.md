@@ -96,6 +96,37 @@ My home dir is {{ .Env.HOME }}.
 """
 ```
 
+## Variables
+
+You can add variables to your configs.
+Variables can be assigned by executing commands or based on manual inputs.
+Executing the following example will wait for you to input your name and age.
+
+```toml
+id = "variables"
+
+[[variables]]
+input = [
+    ["nick", "your nick name"],
+    ["age", "your age in years"],
+]
+exec = [
+    ["curDate", "date"],
+    ["say", "echo 'Hello World'"],
+]
+
+[[config]]
+path = "~/test.conf"
+comment_symbol = "#"
+append = """
+My Nick is {{ .Var.nick}}
+I am {{ .Var.age}} years old
+Today is {{ .Var.curDate }}
+I want to say {{ .Var.say }}
+"""
+```
+
+
 ## Config Specification
 
 ```toml
