@@ -83,6 +83,8 @@ filetype indent plugin on
 " ~~~ CONFIBLE END id: "vimrc" ~~~
 ```
 
+Check my personal config [repository](https://github.com/sj14/dotfiles) for more examples.
+
 ## Templates
 
 You can include environment variables in configs using `{{ .Env.VARIABLE_NAME }}`.
@@ -145,4 +147,19 @@ comment_symbol = "//" # symbol which is recognized as a comment by the target fi
 append = """
 what you want to add
 """
+
+# variables which can be used in the [[config]] parts (see templating)
+[[variables]]
+# Variables which will create an input prompt.
+# The first value is the variable name, the second value is the prompt message.
+input = [ 
+    ["nick", "your nick name"],
+    ["age", "your age in years"],
+]
+# Variables where the command output is assigned.
+# The first value is the variable name, the second value is the command to execute.
+exec = [
+    ["curDate", "date"],
+    ["say", "echo 'Hello World'"],
+]
 ```
