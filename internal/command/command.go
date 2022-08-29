@@ -1,7 +1,7 @@
 package command
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/exec"
 )
@@ -10,7 +10,7 @@ type Command struct {
 	Exec []string `toml:"exec"`
 }
 
-func Exec(commands []Command) {
+func Exec(commands []Command) error {
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
 			c := exec.Command("sh", "-c", cmd)
@@ -18,8 +18,9 @@ func Exec(commands []Command) {
 			c.Stdout = os.Stdout
 
 			if err := c.Run(); err != nil {
-				log.Fatalf("failed running command '%v': %v\n", cmd, err)
+				return fmt.Errorf("failed running command '%v': %v", cmd, err)
 			}
 		}
 	}
+	return nil
 }

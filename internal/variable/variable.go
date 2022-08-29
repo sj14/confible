@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -15,7 +14,16 @@ type Variable struct {
 	Input [][2]string `toml:"input"`
 }
 
-func Parse(variables []Variable) map[string]string {
+func addVar(varMap map[string]string, key, value string) error {
+	if _, ok := varMap[key]; ok {
+		return fmt.Errorf("variable %q already exists", key)
+	}
+
+	varMap[key] = strings.TrimSpace(value)
+	return nil
+}
+
+func Parse(variables []Variable) (map[string]string, error) {
 	result := make(map[string]string)
 
 	for _, variables := range variables {
@@ -29,10 +37,12 @@ func Parse(variables []Variable) map[string]string {
 			c.Stdout = output
 
 			if err := c.Run(); err != nil {
-				log.Fatalf("failed running command '%v': %v\n", cmd, err)
+				return nil, fmt.Errorf("failed running command '%v': %v", cmd, err)
 			}
 
-			result[cmd[0]] = strings.TrimSpace(output.String())
+			if err := addVar(result, cmd[0], output.String()); err != nil {
+				return nil, err
+			}
 		}
 
 		// variables from input
@@ -42,11 +52,13 @@ func Parse(variables []Variable) map[string]string {
 			fmt.Print("> ")
 			text, err := reader.ReadString('\n')
 			if err != nil {
-				log.Fatalf("failed reading input: %v\n", err)
+				return nil, fmt.Errorf("failed reading input: %v", err)
 			}
 
-			result[input[0]] = strings.TrimSpace(text)
+			if err := addVar(result, input[0], text); err != nil {
+				return nil, err
+			}
 		}
 	}
-	return result
+	return result, nil
 }

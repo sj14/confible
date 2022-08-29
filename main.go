@@ -64,7 +64,7 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 
 		configFile, err := os.Open(configPath)
 		if err != nil {
-			log.Fatalf("failed reading config %q: %v\n", configPath, err)
+			return fmt.Errorf("failed reading config %q: %v", configPath, err)
 		}
 
 		dec := toml.NewDecoder(configFile)
@@ -84,7 +84,10 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 		}
 
 		if !noConfig {
-			variableMap := variable.Parse(cfg.Variables)
+			variableMap, err := variable.Parse(cfg.Variables)
+			if err != nil {
+				return err
+			}
 
 			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, variableMap, mode); err != nil {
 				return err

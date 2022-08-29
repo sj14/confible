@@ -15,10 +15,6 @@ path = "testfiles/variables"
 #truncate = true
 comment_symbol = "#"
 append = """
-my_key=42
-my_key=43
-my_key=44
-
 My User is: {{ .Env.USER }}
 My Nick is {{ .Var.nick}}
 I am {{ .Var.age}} years old
