@@ -84,7 +84,7 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 		}
 
 		if !noConfig {
-			variableMap, err := variable.Parse(cfg.Variables)
+			variableMap, err := variable.Parse(cfg.ID, cfg.Variables)
 			if err != nil {
 				return err
 			}

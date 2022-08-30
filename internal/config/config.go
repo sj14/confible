@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/sj14/confible/internal/utils"
 )
 
 const (
@@ -40,13 +42,7 @@ func aggregateConfigs(configs []Config) []Config {
 			log.Fatalf("missing comment symbol\n")
 		}
 
-		if strings.HasPrefix(cfg.Path, "~") {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				log.Fatalf("failed getting home dir: %v\n", err)
-			}
-			cfg.Path = filepath.Join(home, cfg.Path[1:])
-		}
+		cfg.Path = utils.AbsFilepath(cfg.Path)
 
 		// add a new config path (no need for aggregating)
 		if _, ok := configsMap[cfg.Path]; !ok {
