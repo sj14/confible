@@ -71,12 +71,7 @@ func aggregateConfigs(configs []Config) []Config {
 	return aggregated
 }
 
-const (
-	ModeAppend uint8 = iota
-	ModeClean
-)
-
-func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode uint8) error {
+func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode ContentMode) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -100,16 +95,23 @@ func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode ui
 		// process new file content
 		var newContent string
 		switch mode {
-		case ModeAppend:
+		case ModeNormal:
 			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, variables, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
-		case ModeClean:
-			newContent, err = fileContentWithoutConfiblePartOfID(targetFile, id)
+		case ModeCleanWithoutID:
+			newContent, err = fileContent(targetFile, id)
 			if err != nil {
-				return fmt.Errorf("failed cleaning config: %w", err)
+				return fmt.Errorf("failed cleaning id config: %w", err)
 			}
+		case ModeCleanWithoutAll:
+			newContent, err = fileContent(targetFile, "")
+			if err != nil {
+				return fmt.Errorf("failed cleaning all config: %w", err)
+			}
+		default:
+			return fmt.Errorf("wrong or no mode specified")
 		}
 
 		// write content to the file
@@ -120,20 +122,36 @@ func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode ui
 	return nil
 }
 
-func fileContentWithoutConfiblePartOfID(reader io.Reader, id string) (string, error) {
+type ContentMode uint8
+
+const (
+	ModeNormal ContentMode = iota
+	ModeCleanWithoutID
+	ModeCleanWithoutAll
+)
+
+func fileContent(reader io.Reader, id string) (string, error) {
 	content := strings.Builder{}
 
 	// read the already existing file content
 	scanner := bufio.NewScanner(reader)
 	skip := false
 	for scanner.Scan() {
-		// we reached our own old config, do not copy our old config
-		if strings.Contains(scanner.Text(), generateHeaderWithID(id)) {
+		lookForStart := header
+		if id != "" {
+			lookForStart = generateHeaderWithID(id)
+		}
+		// we reached our/any own old confible config, do not copy our old config
+		if strings.Contains(scanner.Text(), lookForStart) {
 			skip = true
 		}
 
-		// our config was read, continue copying the other content
-		if strings.Contains(scanner.Text(), generateFooterWithID(id)) {
+		lookForEnd := footer
+		if id != "" {
+			lookForEnd = generateFooterWithID(id)
+		}
+		// our/any own old confible config was read, continue copying the other content
+		if strings.Contains(scanner.Text(), lookForEnd) {
 			skip = false
 			continue
 		}
@@ -183,7 +201,7 @@ func getEnvMap() stringMap {
 }
 
 func modifyContent(reader io.Reader, id, comment, appendText string, variables stringMap, now time.Time) (string, error) {
-	content, err := fileContentWithoutConfiblePartOfID(reader, id)
+	content, err := fileContent(reader, id)
 	if err != nil {
 		return "", err
 	}

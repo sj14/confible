@@ -34,8 +34,10 @@ confible [flags] <config.toml> [...]
 
 ```text
  Usage of confible:
-  -clean
-        remove the config from the targets (ignores no-cmd and no-cfg flags)
+  -clean-all
+        give a confible file and it will remove all configs from the targets
+  -clean-id
+        give a confible file and it will remove the config from configured targets matching the config id
   -no-cfg
         do not apply any configs
   -no-cmd

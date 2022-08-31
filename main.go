@@ -28,9 +28,11 @@ type confibleFile struct {
 
 func main() {
 	var (
-		noCommands  = flag.Bool("no-cmd", false, "do not exec any commands")
-		noConfig    = flag.Bool("no-cfg", false, "do not apply any configs")
-		clean       = flag.Bool("clean", false, "remove the config from the targets (ignores no-cmd and no-cfg flags)")
+		noCommands = flag.Bool("no-cmd", false, "do not exec any commands")
+		noConfig   = flag.Bool("no-cfg", false, "do not apply any configs")
+		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
+		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
+		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
 		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
@@ -46,19 +48,26 @@ func main() {
 		log.Fatalln("need at least one config file")
 	}
 
-	if *clean {
-		if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeClean); err != nil {
+	if *cleanID {
+		if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeCleanWithoutID); err != nil {
 			log.Fatalln(err)
 		}
 		return
 	}
 
-	if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeAppend); err != nil {
+	if *cleanAll {
+		if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeCleanWithoutAll); err != nil {
+			log.Fatalln(err)
+		}
+		return
+	}
+
+	if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, config.ModeNormal); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode uint8) error {
+func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode config.ContentMode) error {
 	for _, configPath := range configPaths {
 		log.Printf("processing config %q\n", configPath)
 
@@ -79,16 +88,20 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
 
-		if !noCommands && mode == config.ModeAppend {
+		if !noCommands && mode == config.ModeNormal {
 			command.Exec(cfg.Commands)
 		}
 
 		if !noConfig {
-			variableMap, err := variable.Parse(cfg.ID, cfg.Variables)
-			if err != nil {
-				return err
-			}
+			var variableMap map[string]string
 
+			if mode == config.ModeNormal {
+				// only parse variables when we are not in a clean mode
+				variableMap, err = variable.Parse(cfg.ID, cfg.Variables)
+				if err != nil {
+					return err
+				}
+			}
 			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, variableMap, mode); err != nil {
 				return err
 			}
