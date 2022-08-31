@@ -62,7 +62,7 @@ func open() (*os.File, error) {
 	return cacheFile, nil
 }
 
-func LoadCache() (cache, error) {
+func loadCache() (cache, error) {
 	cacheFile, err := open()
 	if err != nil {
 		log.Fatalf("failed to open cache file: %v", err)
@@ -79,8 +79,8 @@ func LoadCache() (cache, error) {
 	return cache, nil
 }
 
-func StoreCache(id string, variables variableMap) error {
-	cache, err := LoadCache()
+func storeCache(id string, variables variableMap) error {
+	cache, err := loadCache()
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 			}
 		}
 
-		cache, err := LoadCache()
+		cache, err := loadCache()
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -165,5 +165,5 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 			}
 		}
 	}
-	return result, StoreCache(id, result)
+	return result, storeCache(id, result)
 }
