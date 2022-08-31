@@ -14,9 +14,19 @@ import (
 	"github.com/sj14/confible/internal/utils"
 )
 
+type VarVal struct {
+	VariableName string `toml:"var"`
+	Prompt       string `toml:"prompt"`
+}
+
+type VarCmd struct {
+	VariableName string `toml:"var"`
+	Cmd          string `toml:"cmd"`
+}
+
 type Variable struct {
-	Exec  [][2]string `toml:"exec"`
-	Input [][2]string `toml:"input"`
+	Exec  []VarCmd `toml:"exec"`
+	Input []VarVal `toml:"input"`
 }
 
 func addVar(varMap variableMap, key idVariable, value string) error {
@@ -114,7 +124,7 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 		for _, cmd := range variables.Exec {
 			output := &bytes.Buffer{}
 
-			c := exec.Command("sh", "-c", cmd[1])
+			c := exec.Command("sh", "-c", cmd.Cmd)
 			c.Stderr = os.Stderr
 			c.Stdout = output
 
@@ -122,7 +132,7 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 				return nil, fmt.Errorf("failed running command '%v': %v", cmd, err)
 			}
 
-			if err := addVar(result, idVariable{id, cmd[0]}, output.String()); err != nil {
+			if err := addVar(result, idVariable{id, cmd.VariableName}, output.String()); err != nil {
 				return nil, err
 			}
 		}
@@ -135,8 +145,8 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 		// variables from input
 		for _, input := range variables.Input {
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Printf("manual input required: %q\n", input[1])
-			cachedValue, ok := cache.Variables[idVariable{id, input[0]}]
+			fmt.Printf("manual input required: %q\n", input.VariableName)
+			cachedValue, ok := cache.Variables[idVariable{id, input.VariableName}]
 			if ok {
 				fmt.Printf("press enter to use the cached value %q\n", cachedValue)
 			}
@@ -150,7 +160,7 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 				text = cachedValue
 			}
 
-			if err := addVar(result, idVariable{id, input[0]}, text); err != nil {
+			if err := addVar(result, idVariable{id, input.VariableName}, text); err != nil {
 				return nil, err
 			}
 		}

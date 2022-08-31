@@ -109,12 +109,12 @@ id = "variables"
 
 [[variables]]
 input = [
-    ["nick", "your nick name"],
-    ["age", "your age in years"],
+    { var = "nick", prompt = "your nick name" },
+    { var = "age", prompt = "your age in years" },
 ]
 exec = [
-    ["curDate", "date"],
-    ["say", "echo 'Hello World'"],
+    { var = "curDate", cmd = "date" },
+    { var = "say", cmd = "echo 'Hello World!'" },
 ]
 
 [[config]]
@@ -153,13 +153,13 @@ what you want to add
 # Variables which will create an input prompt.
 # The first value is the variable name, the second value is the prompt message.
 input = [ 
-    ["nick", "your nick name"],
-    ["age", "your age in years"],
+    { var = "nick", prompt = "your nick name" },
+    { var = "age", prompt = "your age in years" },
 ]
 # Variables where the command output is assigned.
 # The first value is the variable name, the second value is the command to execute.
 exec = [
-    ["curDate", "date"],
-    ["say", "echo 'Hello World'"],
+    { var = "curDate", cmd = "date" },
+    { var = "say", cmd = "echo 'Hello World!'" },
 ]
 ```

@@ -2,12 +2,12 @@ id = "variables"
 
 [[variables]]
 input = [
-    ["nick", "your nick name"],
-    ["age", "your age in years"],
+    { var = "nick", prompt = "your nick name" },
+    { var = "age", prompt = "your age in years" },
 ]
 exec = [
-    ["curDate", "date"],
-    ["something", "echo 'Hello World'"],
+    { var = "curDate", cmd = "date" },
+    { var = "something", cmd = "echo 'Hello World!'" },
 ]
 
 [[config]]
