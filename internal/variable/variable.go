@@ -145,7 +145,7 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 		// variables from input
 		for _, input := range variables.Input {
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Printf("manual input required: %q\n", input.VariableName)
+			fmt.Printf("manual input required: %q\n", input.Prompt)
 			cachedValue, ok := cache.Variables[idVariable{id, input.VariableName}]
 			if ok {
 				fmt.Printf("press enter to use the cached value %q\n", cachedValue)
