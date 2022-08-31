@@ -105,7 +105,7 @@ func storeCache(id string, variables variableMap) error {
 	return encoder.Encode(cache)
 }
 
-func OmitId(m variableMap) map[string]string {
+func omitID(m variableMap) map[string]string {
 	result := make(map[string]string)
 
 	for key, val := range m {
@@ -115,7 +115,7 @@ func OmitId(m variableMap) map[string]string {
 	return result
 }
 
-func Parse(id string, variables []Variable) (variableMap, error) {
+func Parse(id string, variables []Variable) (map[string]string, error) {
 	result := make(variableMap)
 
 	for _, variables := range variables {
@@ -165,5 +165,5 @@ func Parse(id string, variables []Variable) (variableMap, error) {
 			}
 		}
 	}
-	return result, storeCache(id, result)
+	return omitID(result), storeCache(id, result)
 }
