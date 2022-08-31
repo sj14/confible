@@ -3,13 +3,14 @@ package variable
 import (
 	"bufio"
 	"bytes"
+	"encoding/gob"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/pelletier/go-toml/v2"
 	"github.com/sj14/confible/internal/utils"
 )
 
@@ -18,7 +19,7 @@ type Variable struct {
 	Input [][2]string `toml:"input"`
 }
 
-func addVar(varMap map[string]string, key, value string) error {
+func addVar(varMap variableMap, key idVariable, value string) error {
 	if _, ok := varMap[key]; ok {
 		return fmt.Errorf("variable %q already exists", key)
 	}
@@ -27,11 +28,18 @@ func addVar(varMap map[string]string, key, value string) error {
 	return nil
 }
 
-type cache struct {
-	Variables map[string]string `toml:"variables"`
+type idVariable struct {
+	ID           string
+	VariableName string
 }
 
-var pathMacOS = utils.AbsFilepath("~/Library/Preferences/confible.toml")
+type variableMap map[idVariable]string
+
+type cache struct {
+	Variables variableMap `toml:"variables"`
+}
+
+var pathMacOS = utils.AbsFilepath("~/Library/Preferences/confible.cache")
 
 // DON'T FORGET TO CLOSE FILE
 func open() (*os.File, error) {
@@ -52,24 +60,23 @@ func LoadCache() (cache, error) {
 	defer cacheFile.Close()
 
 	// read the old cache
-	decoder := toml.NewDecoder(cacheFile)
+	decoder := gob.NewDecoder(cacheFile)
 	cache := cache{}
-	if err := decoder.Decode(&cache); err != nil {
+	if err := decoder.Decode(&cache); err != nil && err != io.EOF {
 		return cache, fmt.Errorf("failed decoding confible cache: %v", err)
 	}
 
 	return cache, nil
 }
 
-// TODO: Store ID together with variables as there might be the same variable names with other IDs
-func StoreCache(variables map[string]string) error {
+func StoreCache(id string, variables variableMap) error {
 	cache, err := LoadCache()
 	if err != nil {
 		return err
 	}
 
 	if cache.Variables == nil {
-		cache.Variables = make(map[string]string)
+		cache.Variables = make(variableMap)
 	}
 
 	// add the new cache values
@@ -84,12 +91,22 @@ func StoreCache(variables map[string]string) error {
 	}
 	defer cacheFile.Close()
 
-	encoder := toml.NewEncoder(cacheFile)
+	encoder := gob.NewEncoder(cacheFile)
 	return encoder.Encode(cache)
 }
 
-func Parse(id string, variables []Variable) (map[string]string, error) {
+func OmitId(m variableMap) map[string]string {
 	result := make(map[string]string)
+
+	for key, val := range m {
+		result[key.VariableName] = val
+	}
+
+	return result
+}
+
+func Parse(id string, variables []Variable) (variableMap, error) {
+	result := make(variableMap)
 
 	for _, variables := range variables {
 		// variables from commands
@@ -105,7 +122,7 @@ func Parse(id string, variables []Variable) (map[string]string, error) {
 				return nil, fmt.Errorf("failed running command '%v': %v", cmd, err)
 			}
 
-			if err := addVar(result, cmd[0], output.String()); err != nil {
+			if err := addVar(result, idVariable{id, cmd[0]}, output.String()); err != nil {
 				return nil, err
 			}
 		}
@@ -119,7 +136,7 @@ func Parse(id string, variables []Variable) (map[string]string, error) {
 		for _, input := range variables.Input {
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Printf("manual input required: %q\n", input[1])
-			cachedValue, ok := cache.Variables[input[0]]
+			cachedValue, ok := cache.Variables[idVariable{id, input[0]}]
 			if ok {
 				fmt.Printf("press enter to use the cached value %q\n", cachedValue)
 			}
@@ -133,10 +150,10 @@ func Parse(id string, variables []Variable) (map[string]string, error) {
 				text = cachedValue
 			}
 
-			if err := addVar(result, input[0], text); err != nil {
+			if err := addVar(result, idVariable{id, input[0]}, text); err != nil {
 				return nil, err
 			}
 		}
 	}
-	return result, StoreCache(result)
+	return result, StoreCache(id, result)
 }

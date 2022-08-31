@@ -89,7 +89,7 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 				return err
 			}
 
-			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, variableMap, mode); err != nil {
+			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, variable.OmitId(variableMap), mode); err != nil {
 				return err
 			}
 		}
