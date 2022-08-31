@@ -1,8 +1,8 @@
 # ~~~ CONFIBLE START id: "variables" ~~~
-# Wed, 31 Aug 2022 15:21:15 CEST
+# Wed, 31 Aug 2022 15:23:49 CEST
 My User is: simon
 My Nick is Simon
 I am 33 years old
-Today is Mi 31 Aug 2022 15:21:10 CEST
+Today is Mi 31 Aug 2022 15:23:48 CEST
 I want to say Hello World!
 # ~~~ CONFIBLE END id: "variables" ~~~

@@ -11,7 +11,7 @@ exec = [
 ]
 
 [[config]]
-path = "testfiles/variables"
+path = "testfiles/variables.txt"
 #truncate = true
 comment_symbol = "#"
 append = """
