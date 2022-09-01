@@ -5,13 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+
+	"github.com/sj14/confible/internal/confible"
 )
 
-type Command struct {
-	Exec []string `toml:"exec"`
-}
-
-func Exec(commands []Command) error {
+func Exec(commands []confible.Command) error {
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
 			c := exec.Command("sh", "-c", cmd)

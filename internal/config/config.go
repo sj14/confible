@@ -11,7 +11,9 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/utils"
+	"github.com/sj14/confible/internal/variable"
 )
 
 const (
@@ -19,17 +21,10 @@ const (
 	footer = "CONFIBLE END"
 )
 
-type Config struct {
-	Path     string `toml:"path"`
-	Truncate bool   `toml:"truncate"`
-	Comment  string `toml:"comment_symbol"`
-	Append   string `toml:"append"`
-}
-
 // validate and aggregate configs which target the same file
-func aggregateConfigs(configs []Config) []Config {
+func aggregateConfigs(configs []confible.Config) []confible.Config {
 	// the key is the path of the config file
-	configsMap := make(map[string]Config)
+	configsMap := make(map[string]confible.Config)
 
 	for _, cfg := range configs {
 		if cfg.Append == "" {
@@ -63,7 +58,7 @@ func aggregateConfigs(configs []Config) []Config {
 		configsMap[cfg.Path] = old
 	}
 
-	var aggregated []Config
+	var aggregated []confible.Config
 	for _, cfg := range configsMap {
 		aggregated = append(aggregated, cfg)
 	}
@@ -71,8 +66,23 @@ func aggregateConfigs(configs []Config) []Config {
 	return aggregated
 }
 
-func ModifyTargetFiles(id string, configs []Config, td TemplateData, mode ContentMode) error {
-	configs = aggregateConfigs(configs)
+func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentMode) error {
+	configs := aggregateConfigs(confibleFile.Configs)
+
+	var td TemplateData
+
+	if mode == ModeNormal {
+		// only create template when we are not in a clean mode
+		variableMap, err := variable.Parse(confibleFile.ID, confibleFile.Variables, useCached)
+		if err != nil {
+			return err
+		}
+
+		td = TemplateData{
+			Env: utils.GetEnvMap(),
+			Var: variableMap,
+		}
+	}
 
 	for _, cfg := range configs {
 		flag := os.O_CREATE
@@ -96,16 +106,16 @@ func ModifyTargetFiles(id string, configs []Config, td TemplateData, mode Conten
 		var newContent string
 		switch mode {
 		case ModeNormal:
-			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, td, time.Now())
+			newContent, err = modifyContent(targetFile, confibleFile.ID, cfg.Comment, cfg.Append, td, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
-		case ModeCleanWithoutID:
-			newContent, err = fileContent(targetFile, id)
+		case ModeCleanID:
+			newContent, err = fileContent(targetFile, confibleFile.ID)
 			if err != nil {
 				return fmt.Errorf("failed cleaning id config: %w", err)
 			}
-		case ModeCleanWithoutAll:
+		case ModeCleanAll:
 			newContent, err = fileContent(targetFile, "")
 			if err != nil {
 				return fmt.Errorf("failed cleaning all config: %w", err)
@@ -126,8 +136,8 @@ type ContentMode uint8
 
 const (
 	ModeNormal ContentMode = iota
-	ModeCleanWithoutID
-	ModeCleanWithoutAll
+	ModeCleanID
+	ModeCleanAll
 )
 
 func fileContent(reader io.Reader, id string) (string, error) {

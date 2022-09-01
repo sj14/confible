@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/utils"
 	"github.com/stretchr/testify/require"
 )
@@ -162,12 +163,12 @@ new line 2
 func TestAggregateConfigs(t *testing.T) {
 	tests := []struct {
 		name    string
-		configs []Config
-		want    []Config
+		configs []confible.Config
+		want    []confible.Config
 	}{
 		{
 			name: "combine",
-			configs: []Config{
+			configs: []confible.Config{
 				{
 					Comment: "#",
 					Path:    "/tmp/test",
@@ -179,7 +180,7 @@ func TestAggregateConfigs(t *testing.T) {
 					Append:  "line 2\n",
 				},
 			},
-			want: []Config{
+			want: []confible.Config{
 				{
 					Comment: "#",
 					Path:    "/tmp/test",

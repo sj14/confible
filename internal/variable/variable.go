@@ -13,23 +13,9 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/utils"
 )
-
-type VarVal struct {
-	VariableName string `toml:"var"`
-	Prompt       string `toml:"prompt"`
-}
-
-type VarCmd struct {
-	VariableName string `toml:"var"`
-	Cmd          string `toml:"cmd"`
-}
-
-type Variable struct {
-	Exec  []VarCmd `toml:"exec"`
-	Input []VarVal `toml:"input"`
-}
 
 func addVar(varMap variableMap, key idVariable, value string) error {
 	if _, ok := varMap[key]; ok {
@@ -129,7 +115,7 @@ func omitID(m variableMap) map[string]string {
 	return result
 }
 
-func Parse(id string, variables []Variable) (map[string]string, error) {
+func Parse(id string, variables []confible.Variable, useCached bool) (map[string]string, error) {
 	result := make(variableMap)
 
 	cache, err := loadCache()
@@ -158,10 +144,19 @@ func Parse(id string, variables []Variable) (map[string]string, error) {
 
 		// variables from input
 		for _, input := range variables.Input {
+			cachedValue, cacheFound := cache.Variables[idVariable{id, input.VariableName}]
+			if cacheFound {
+				if useCached {
+					if err := addVar(result, idVariable{id, input.VariableName}, cachedValue); err != nil {
+						return nil, err
+					}
+					continue
+				}
+			}
+
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Printf("manual input required: %q\n", input.Prompt)
-			cachedValue, ok := cache.Variables[idVariable{id, input.VariableName}]
-			if ok {
+			if cacheFound {
 				fmt.Printf("press enter to use the cached value: %q\n", cachedValue)
 			}
 			fmt.Print("> ")
