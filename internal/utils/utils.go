@@ -8,7 +8,7 @@ import (
 )
 
 func AbsFilepath(path string) string {
-	if !strings.HasPrefix(path, "~/") {
+	if !strings.HasPrefix(path, "~") {
 		return path
 	}
 
@@ -17,7 +17,7 @@ func AbsFilepath(path string) string {
 		log.Fatalf("failed getting home dir: %v\n", err)
 	}
 
-	return filepath.Join(home, path[2:])
+	return filepath.Join(home, path[1:])
 }
 
 func GetEnvMap() map[string]string {

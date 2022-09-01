@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -57,9 +58,9 @@ func getCacheFilepath() string {
 	case "linux":
 		return os.ExpandEnv("$XDG_CONFIG_DIRS/confible.cache")
 	case "windows":
-		return os.ExpandEnv("$LOCALAPPDATA/confible.cache")
+		return os.ExpandEnv("$LOCALAPPDATA\\confible.cache")
 	default:
-		return utils.AbsFilepath("~/.confible.cache")
+		return utils.AbsFilepath(filepath.Join("~", ".confible.cache"))
 	}
 }
 
