@@ -19,3 +19,14 @@ func AbsFilepath(path string) string {
 
 	return filepath.Join(home, path[2:])
 }
+
+func GetEnvMap() map[string]string {
+	envMap := make(map[string]string)
+
+	for _, environ := range os.Environ() {
+		keyValue := strings.SplitN(environ, "=", 2)
+		envMap[keyValue[0]] = keyValue[1]
+	}
+
+	return envMap
+}

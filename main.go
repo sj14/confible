@@ -9,6 +9,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/sj14/confible/internal/command"
 	"github.com/sj14/confible/internal/config"
+	"github.com/sj14/confible/internal/utils"
 	"github.com/sj14/confible/internal/variable"
 )
 
@@ -93,16 +94,21 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig bool, mode 
 		}
 
 		if !noConfig {
-			var variableMap map[string]string
+			var td config.TemplateData
 
 			if mode == config.ModeNormal {
-				// only parse variables when we are not in a clean mode
-				variableMap, err = variable.Parse(cfg.ID, cfg.Variables)
+				// only create template when we are not in a clean mode
+				variableMap, err := variable.Parse(cfg.ID, cfg.Variables)
 				if err != nil {
 					return err
 				}
+
+				td = config.TemplateData{
+					Env: utils.GetEnvMap(),
+					Var: variableMap,
+				}
 			}
-			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, variableMap, mode); err != nil {
+			if err := config.ModifyTargetFiles(cfg.ID, cfg.Configs, td, mode); err != nil {
 				return err
 			}
 		}

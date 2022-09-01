@@ -71,7 +71,7 @@ func aggregateConfigs(configs []Config) []Config {
 	return aggregated
 }
 
-func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode ContentMode) error {
+func ModifyTargetFiles(id string, configs []Config, td TemplateData, mode ContentMode) error {
 	configs = aggregateConfigs(configs)
 
 	for _, cfg := range configs {
@@ -96,7 +96,7 @@ func ModifyTargetFiles(id string, configs []Config, variables stringMap, mode Co
 		var newContent string
 		switch mode {
 		case ModeNormal:
-			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, variables, time.Now())
+			newContent, err = modifyContent(targetFile, id, cfg.Comment, cfg.Append, td, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
@@ -182,25 +182,12 @@ func generateFooterWithID(id string) string {
 	return fmt.Sprintf(footer+" id: %q", id)
 }
 
-type stringMap map[string]string
-
-type templateData struct {
-	Env stringMap
-	Var stringMap
+type TemplateData struct {
+	Env map[string]string
+	Var map[string]string
 }
 
-func getEnvMap() stringMap {
-	envMap := make(stringMap)
-
-	for _, environ := range os.Environ() {
-		keyValue := strings.SplitN(environ, "=", 2)
-		envMap[keyValue[0]] = keyValue[1]
-	}
-
-	return envMap
-}
-
-func modifyContent(reader io.Reader, id, comment, appendText string, variables stringMap, now time.Time) (string, error) {
+func modifyContent(reader io.Reader, id, comment, appendText string, td TemplateData, now time.Time) (string, error) {
 	content, err := fileContent(reader, id)
 	if err != nil {
 		return "", err
@@ -221,12 +208,6 @@ func modifyContent(reader io.Reader, id, comment, appendText string, variables s
 	// header
 	if _, err := newContent.WriteString(comment + " ~~~ " + generateHeaderWithID(id) + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
 		return "", err
-	}
-
-	// template config
-	td := templateData{
-		Env: getEnvMap(),
-		Var: variables,
 	}
 
 	templ, err := template.New("").Parse(strings.TrimSpace(appendText))
