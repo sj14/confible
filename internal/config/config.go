@@ -3,12 +3,12 @@ package config
 import (
 	"bufio"
 	"fmt"
-	"html/template"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/sj14/confible/internal/utils"
