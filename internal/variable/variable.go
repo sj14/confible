@@ -61,7 +61,6 @@ func getCacheFilepath() string {
 	default:
 		return utils.AbsFilepath("~/.confible.cache")
 	}
-
 }
 
 // DON'T FORGET TO CLOSE FILE

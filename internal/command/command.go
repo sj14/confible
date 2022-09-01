@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 type Command struct {
@@ -14,6 +15,10 @@ func Exec(commands []Command) error {
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
 			c := exec.Command("sh", "-c", cmd)
+
+			if runtime.GOOS == "windows" {
+				c = exec.Command("cmd", "/C", cmd) // TODO: untested
+			}
 			c.Stderr = os.Stderr
 			c.Stdout = os.Stdout
 
