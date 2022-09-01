@@ -118,6 +118,11 @@ func omitID(m variableMap) map[string]string {
 func Parse(id string, variables []Variable) (map[string]string, error) {
 	result := make(variableMap)
 
+	cache, err := loadCache()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	for _, variables := range variables {
 		// variables from commands
 		// TODO: combine with command.Exec()
@@ -137,18 +142,13 @@ func Parse(id string, variables []Variable) (map[string]string, error) {
 			}
 		}
 
-		cache, err := loadCache()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
 		// variables from input
 		for _, input := range variables.Input {
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Printf("manual input required: %q\n", input.Prompt)
 			cachedValue, ok := cache.Variables[idVariable{id, input.VariableName}]
 			if ok {
-				fmt.Printf("press enter to use the cached value %q\n", cachedValue)
+				fmt.Printf("press enter to use the cached value: %q\n", cachedValue)
 			}
 			fmt.Print("> ")
 			text, err := reader.ReadString('\n')
