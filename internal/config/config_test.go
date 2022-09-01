@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sj14/confible/internal/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -147,7 +148,7 @@ new line 2
 			}
 
 			// TODO: check variables (currently passing nil)
-			got, err := modifyContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, nil, tt.args.now)
+			got, err := modifyContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, TemplateData{Env: utils.GetEnvMap()}, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendContent() error = %v, wantErr %v", err, tt.wantErr)
 				return
