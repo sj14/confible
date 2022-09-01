@@ -50,6 +50,19 @@ func getCacheFilepath() string {
 	}
 }
 
+func CleanCache() {
+	cacheFile, err := open()
+	if err != nil {
+		log.Fatalf("failed to open cache file: %v", err)
+	}
+	defer cacheFile.Close()
+
+	if err := cacheFile.Truncate(0); err != nil {
+		log.Fatalf("failed cleaning cache file: %v\n", err)
+	}
+
+}
+
 // DON'T FORGET TO CLOSE FILE
 func open() (*os.File, error) {
 	// open the cache file
