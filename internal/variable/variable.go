@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 
 	"github.com/sj14/confible/internal/utils"
@@ -49,14 +50,27 @@ type cache struct {
 	Variables variableMap `toml:"variables"`
 }
 
-var pathMacOS = utils.AbsFilepath("~/Library/Preferences/confible.cache")
+func getCacheFilepath() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return utils.AbsFilepath("~/Library/Preferences/confible.cache")
+	case "linux":
+		return os.ExpandEnv("$XDG_CONFIG_DIRS/confible.cache")
+	case "windows":
+		return os.ExpandEnv("$LOCALAPPDATA/confible.cache")
+	default:
+		return utils.AbsFilepath("~/.confible.cache")
+	}
+
+}
 
 // DON'T FORGET TO CLOSE FILE
 func open() (*os.File, error) {
 	// open the cache file
-	cacheFile, err := os.OpenFile(pathMacOS, os.O_RDWR|os.O_CREATE, 0o666)
+	cacheFilepath := getCacheFilepath()
+	cacheFile, err := os.OpenFile(cacheFilepath, os.O_RDWR|os.O_CREATE, 0o666)
 	if err != nil {
-		return nil, fmt.Errorf("failed creating cache file (%v): %v", pathMacOS, err)
+		return nil, fmt.Errorf("failed creating cache file (%v): %v", cacheFilepath, err)
 	}
 
 	return cacheFile, nil
