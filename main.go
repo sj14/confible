@@ -86,7 +86,9 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig, cachedCmds
 		}
 
 		if !noCommands && mode == config.ModeNormal {
-			command.Exec(cfg.ID, cfg.Commands, cachedCmds)
+			if err := command.Exec(cfg.ID, cfg.Commands, cachedCmds); err != nil {
+				return err
+			}
 		}
 
 		if !noConfig {
