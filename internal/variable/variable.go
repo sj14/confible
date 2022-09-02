@@ -14,8 +14,6 @@ import (
 )
 
 func Parse(id string, variables []confible.Variable, useCached bool) (map[string]string, error) {
-	result := make(cache.VariableMap)
-
 	cacheInstance, err := cache.Load()
 	if err != nil {
 		log.Fatalln(err)
@@ -35,17 +33,17 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 				return nil, fmt.Errorf("failed running command '%v': %v", cmd, err)
 			}
 
-			if err := cache.AddVar(result, id, cmd.VariableName, output.String()); err != nil {
+			if err := cacheInstance.UpsertVar(id, cmd.VariableName, output.String()); err != nil {
 				return nil, err
 			}
 		}
 
 		// variables from input
 		for _, input := range variables.Input {
-			cachedValue, cacheFound := cacheInstance.Variables[cache.IdVariable{id, input.VariableName}]
-			if cacheFound {
+			cachedValue := cacheInstance.LoadVar(id, input.VariableName)
+			if cachedValue != "" {
 				if useCached {
-					if err := cache.AddVar(result, id, input.VariableName, cachedValue); err != nil {
+					if err := cacheInstance.UpsertVar(id, input.VariableName, cachedValue); err != nil {
 						return nil, err
 					}
 					continue
@@ -54,7 +52,7 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Printf("manual input required: %q\n", input.Prompt)
-			if cacheFound {
+			if cachedValue != "" {
 				fmt.Printf("press enter to use the cached value: %q\n", cachedValue)
 			}
 			fmt.Print("> ")
@@ -67,10 +65,10 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 				text = cachedValue
 			}
 
-			if err := cache.AddVar(result, id, input.VariableName, text); err != nil {
+			if err := cacheInstance.UpsertVar(id, input.VariableName, text); err != nil {
 				return nil, err
 			}
 		}
 	}
-	return cache.OmitID(result), cache.Store(id, result)
+	return cacheInstance.LoadVars(id), cacheInstance.Store()
 }

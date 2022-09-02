@@ -13,24 +13,36 @@ import (
 	"github.com/sj14/confible/internal/utils"
 )
 
-type IdVariable struct {
-	ID           string
+type idVariable struct {
+	Id           string
 	VariableName string
 }
 
-type VariableMap map[IdVariable]string
+type variableMap map[idVariable]string
 
 type cache struct {
-	Variables VariableMap `toml:"variables"`
+	variables variableMap `toml:"variables"`
 }
 
-func AddVar(varMap VariableMap, id, name, value string) error {
-	key := IdVariable{ID: id, VariableName: name}
-	if _, ok := varMap[key]; ok {
-		return fmt.Errorf("variable %q already exists for ID %q", name, id)
-	}
+// I don't want to export the variables, thus a new struct which won't be returned in any public func.
+type cacheGob struct {
+	Variables variableMap
+}
 
-	varMap[key] = strings.TrimSpace(value)
+func gobTocache(gobCache cacheGob) cache {
+	return cache{
+		variables: gobCache.Variables,
+	}
+}
+
+func cacheToGob(c cache) cacheGob {
+	return cacheGob{
+		Variables: c.variables,
+	}
+}
+
+func (c *cache) UpsertVar(id, name, value string) error {
+	c.variables[idVariable{Id: id, VariableName: name}] = strings.TrimSpace(value)
 	return nil
 }
 
@@ -82,28 +94,35 @@ func Load() (cache, error) {
 	// read the old cache
 	decoder := gob.NewDecoder(cacheFile)
 	cache := cache{}
-	if err := decoder.Decode(&cache); err != nil && err != io.EOF {
+	gobCache := cacheGob{}
+	if err := decoder.Decode(&gobCache); err != nil && err != io.EOF {
 		return cache, fmt.Errorf("failed decoding confible cache: %v", err)
 	}
 
+	cache = gobTocache(gobCache)
+	if cache.variables == nil {
+		cache.variables = make(variableMap)
+	}
 	return cache, nil
 }
 
-func Store(id string, variables VariableMap) error {
-	cache, err := Load()
-	if err != nil {
-		return err
+func (c *cache) LoadVar(id, varName string) string {
+	return c.variables[idVariable{Id: id, VariableName: varName}]
+}
+
+func (c *cache) LoadVars(id string) map[string]string {
+	result := make(map[string]string)
+
+	for key, val := range c.variables {
+		if key.Id == id {
+			result[key.VariableName] = val
+		}
 	}
 
-	if cache.Variables == nil {
-		cache.Variables = make(VariableMap)
-	}
+	return result
+}
 
-	// add the new cache values
-	for key, value := range variables {
-		cache.Variables[key] = value
-	}
-
+func (c *cache) Store() error {
 	// store the new cache
 	cacheFile, err := open()
 	if err != nil {
@@ -112,15 +131,5 @@ func Store(id string, variables VariableMap) error {
 	defer cacheFile.Close()
 
 	encoder := gob.NewEncoder(cacheFile)
-	return encoder.Encode(cache)
-}
-
-func OmitID(m VariableMap) map[string]string {
-	result := make(map[string]string)
-
-	for key, val := range m {
-		result[key.VariableName] = val
-	}
-
-	return result
+	return encoder.Encode(cacheToGob(*c))
 }
