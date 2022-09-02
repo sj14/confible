@@ -154,6 +154,11 @@ func fileContent(reader io.Reader, id string) (string, error) {
 		}
 		// we reached our/any own old confible config, do not copy our old config
 		if strings.Contains(scanner.Text(), lookForStart) {
+			// some cleaning when we multiple confible configs write to the same file
+			// otherwise each execution would increase the blank lines
+			cacheNewContent := strings.TrimSpace(content.String())
+			content.Reset()
+			content.WriteString(cacheNewContent + "\n\n")
 			skip = true
 		}
 
@@ -171,10 +176,7 @@ func fileContent(reader io.Reader, id string) (string, error) {
 			continue
 		}
 
-		if _, err := content.Write(scanner.Bytes()); err != nil {
-			return "", err
-		}
-		if err := content.WriteByte('\n'); err != nil {
+		if _, err := content.Write(append(scanner.Bytes(), '\n')); err != nil {
 			return "", err
 		}
 	}
@@ -199,13 +201,13 @@ type TemplateData struct {
 }
 
 func modifyContent(reader io.Reader, id, comment, appendText string, td TemplateData, now time.Time) (string, error) {
-	content, err := fileContent(reader, id)
+	oldContent, err := fileContent(reader, id)
 	if err != nil {
 		return "", err
 	}
 
 	var newContent = strings.Builder{}
-	if _, err = newContent.WriteString(content); err != nil {
+	if _, err = newContent.WriteString(oldContent); err != nil {
 		return "", err
 	}
 
