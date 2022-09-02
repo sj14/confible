@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/sj14/confible/internal/cache"
 	"github.com/sj14/confible/internal/command"
 	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/config"
-	"github.com/sj14/confible/internal/variable"
 )
 
 var (
@@ -41,7 +41,7 @@ func main() {
 	}
 
 	if *cleanCache {
-		variable.CleanCache()
+		cache.Clean()
 		os.Exit(0)
 	}
 
