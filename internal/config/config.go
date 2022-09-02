@@ -128,6 +128,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 		if err := os.WriteFile(cfg.Path, []byte(newContent), os.ModePerm); err != nil {
 			return fmt.Errorf("failed writing target file (%v): %v", cfg.Path, err)
 		}
+		log.Printf("[%v] wrote config to %q\n", confibleFile.ID, cfg.Path)
 	}
 	return nil
 }
