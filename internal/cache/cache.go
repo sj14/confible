@@ -13,15 +13,28 @@ import (
 	"github.com/sj14/confible/internal/utils"
 )
 
-type idVariable struct {
-	Id           string
-	VariableName string
-}
+// key == variable name; value == variable value
+type keyValueMap map[string]string
 
-type variableMap map[idVariable]string
+// key == id
+type variableMap map[string]keyValueMap
+
+// type commandHash struct {
+// 	id      string
+// 	command confible.Command
+// 	hash    string
+// }
+
+// func GetCommandHash(id string, command confible.Command) string {
+// 	combination := id
+// 	for i, cmd := range command.Exec {
+// 		combination += fmt.Sprintf("%v", i) + cmd
+// 	}
+// 	return fmt.Sprintf("%x", md5.Sum([]byte(combination)))
+// }
 
 type cache struct {
-	variables variableMap `toml:"variables"`
+	variables variableMap
 }
 
 // I don't want to export the variables, thus a new struct which won't be returned in any public func.
@@ -41,9 +54,11 @@ func cacheToGob(c cache) cacheGob {
 	}
 }
 
-func (c *cache) UpsertVar(id, name, value string) error {
-	c.variables[idVariable{Id: id, VariableName: name}] = strings.TrimSpace(value)
-	return nil
+func (c *cache) UpsertVar(id, name, value string) {
+	if c.variables[id] == nil {
+		c.variables[id] = make(keyValueMap)
+	}
+	c.variables[id][name] = strings.TrimSpace(value)
 }
 
 func getCacheFilepath() string {
@@ -103,23 +118,16 @@ func Load() (cache, error) {
 	if cache.variables == nil {
 		cache.variables = make(variableMap)
 	}
+	log.Printf("LOADED: %+v\n", cache)
 	return cache, nil
 }
 
 func (c *cache) LoadVar(id, varName string) string {
-	return c.variables[idVariable{Id: id, VariableName: varName}]
+	return c.variables[id][varName]
 }
 
 func (c *cache) LoadVars(id string) map[string]string {
-	result := make(map[string]string)
-
-	for key, val := range c.variables {
-		if key.Id == id {
-			result[key.VariableName] = val
-		}
-	}
-
-	return result
+	return c.variables[id]
 }
 
 func (c *cache) Store() error {

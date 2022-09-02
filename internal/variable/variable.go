@@ -33,9 +33,7 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 				return nil, fmt.Errorf("failed running command '%v': %v", cmd, err)
 			}
 
-			if err := cacheInstance.UpsertVar(id, cmd.VariableName, output.String()); err != nil {
-				return nil, err
-			}
+			cacheInstance.UpsertVar(id, cmd.VariableName, output.String())
 		}
 
 		// variables from input
@@ -43,9 +41,7 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 			cachedValue := cacheInstance.LoadVar(id, input.VariableName)
 			if cachedValue != "" {
 				if useCached {
-					if err := cacheInstance.UpsertVar(id, input.VariableName, cachedValue); err != nil {
-						return nil, err
-					}
+					cacheInstance.UpsertVar(id, input.VariableName, cachedValue)
 					continue
 				}
 			}
@@ -65,9 +61,7 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 				text = cachedValue
 			}
 
-			if err := cacheInstance.UpsertVar(id, input.VariableName, text); err != nil {
-				return nil, err
-			}
+			cacheInstance.UpsertVar(id, input.VariableName, text)
 		}
 	}
 	return cacheInstance.LoadVars(id), cacheInstance.Store()
