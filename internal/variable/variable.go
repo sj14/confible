@@ -56,8 +56,8 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 			if err != nil {
 				return nil, fmt.Errorf("failed reading variable input: %v", err)
 			}
-
-			if strings.TrimSpace(text) == "" {
+			text = strings.TrimSpace(text)
+			if text == "" {
 				text = cachedValue
 			}
 
