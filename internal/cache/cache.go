@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/utils"
 )
 
@@ -17,41 +18,40 @@ import (
 type keyValueMap map[string]string
 
 // key == id
-type variableMap map[string]keyValueMap
+type variablesMap map[string]keyValueMap
 
-// type commandHash struct {
-// 	id      string
-// 	command confible.Command
-// 	hash    string
-// }
-
-// func GetCommandHash(id string, command confible.Command) string {
-// 	combination := id
-// 	for i, cmd := range command.Exec {
-// 		combination += fmt.Sprintf("%v", i) + cmd
-// 	}
-// 	return fmt.Sprintf("%x", md5.Sum([]byte(combination)))
-// }
+// key == id
+type commandsMap map[string][]confible.Command
 
 type cache struct {
-	variables variableMap
+	variables variablesMap
+	commands  commandsMap
 }
 
 // I don't want to export the variables, thus a new struct which won't be returned in any public func.
 type cacheGob struct {
-	Variables variableMap
+	Variables variablesMap
+	Commands  commandsMap
 }
 
 func gobTocache(gobCache cacheGob) cache {
 	return cache{
 		variables: gobCache.Variables,
+		commands:  gobCache.Commands,
 	}
 }
 
 func cacheToGob(c cache) cacheGob {
 	return cacheGob{
 		Variables: c.variables,
+		Commands:  c.commands,
 	}
+}
+
+// store only when we processed all commands!
+// Do not update one after another! All at once!
+func (c *cache) UpsertCommands(id string, commands []confible.Command) {
+	c.commands[id] = commands
 }
 
 func (c *cache) UpsertVar(id, name, value string) {
@@ -116,9 +116,11 @@ func Load() (cache, error) {
 
 	cache = gobTocache(gobCache)
 	if cache.variables == nil {
-		cache.variables = make(variableMap)
+		cache.variables = make(variablesMap)
 	}
-	log.Printf("LOADED: %+v\n", cache)
+	if cache.commands == nil {
+		cache.commands = make(commandsMap)
+	}
 	return cache, nil
 }
 
@@ -128,6 +130,10 @@ func (c *cache) LoadVar(id, varName string) string {
 
 func (c *cache) LoadVars(id string) map[string]string {
 	return c.variables[id]
+}
+
+func (c *cache) LoadCommands(id string) []confible.Command {
+	return c.commands[id]
 }
 
 func (c *cache) Store() error {

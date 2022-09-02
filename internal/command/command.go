@@ -2,14 +2,31 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
+	"reflect"
 	"runtime"
 
+	"github.com/sj14/confible/internal/cache"
 	"github.com/sj14/confible/internal/confible"
 )
 
-func Exec(commands []confible.Command) error {
+func Exec(id string, commands []confible.Command, useCache bool) error {
+	if len(commands) == 0 {
+		return nil
+	}
+	cacheInstance, err := cache.Load()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if useCache {
+		cmds := cacheInstance.LoadCommands(id)
+		if reflect.DeepEqual(cmds, commands) {
+			log.Printf("[%v] commands are cached", id)
+			return nil
+		}
+	}
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
 			c := exec.Command("sh", "-c", cmd)
@@ -25,5 +42,6 @@ func Exec(commands []confible.Command) error {
 			}
 		}
 	}
-	return nil
+	cacheInstance.UpsertCommands(id, commands)
+	return cacheInstance.Store()
 }

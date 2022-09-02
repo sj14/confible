@@ -24,7 +24,8 @@ func main() {
 	var (
 		noCommands = flag.Bool("no-cmd", false, "do not exec any commands")
 		noConfig   = flag.Bool("no-cfg", false, "do not apply any configs")
-		cached     = flag.Bool("cached", false, "use the variable from the cache when present")
+		cachedVars = flag.Bool("cached-vars", true, "use the variables from the cache when present")
+		cachedCmds = flag.Bool("cached-commands", true, "don't execute commands when they didn't change since last execution")
 		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
 		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
@@ -58,12 +59,12 @@ func main() {
 		mode = config.ModeCleanAll
 	}
 
-	if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, *cached, mode); err != nil {
+	if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, *cachedCmds, *cachedVars, mode); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func processConfibleFiles(configPaths []string, noCommands, noConfig, useCached bool, mode config.ContentMode) error {
+func processConfibleFiles(configPaths []string, noCommands, noConfig, cachedCmds, useCachedVars bool, mode config.ContentMode) error {
 	for _, configPath := range configPaths {
 		log.Printf("processing config %q\n", configPath)
 
@@ -85,11 +86,11 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig, useCached 
 		}
 
 		if !noCommands && mode == config.ModeNormal {
-			command.Exec(cfg.Commands)
+			command.Exec(cfg.ID, cfg.Commands, cachedCmds)
 		}
 
 		if !noConfig {
-			if err := config.ModifyTargetFiles(cfg, useCached, mode); err != nil {
+			if err := config.ModifyTargetFiles(cfg, useCachedVars, mode); err != nil {
 				return err
 			}
 		}
