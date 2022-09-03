@@ -36,7 +36,7 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 			if cachedValue != "" {
 				if useCached {
 					cacheInstance.UpsertVar(id, input.VariableName, cachedValue)
-					log.Printf("[%v] using cached variable %q", id, input.VariableName)
+					log.Printf("[%v] using cached variable %q: %q", id, input.VariableName, cachedValue)
 					continue
 				}
 			}
