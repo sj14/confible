@@ -22,8 +22,8 @@ var (
 
 func main() {
 	var (
-		cmdFlag    = flag.Bool("cmd", true, "exec commands")
-		cfgFlag    = flag.Bool("cfg", true, "apply configs")
+		cmdFlag    = flag.Bool("cmds", true, "exec commands")
+		cfgFlag    = flag.Bool("cfgs", true, "apply configs")
 		cachedVars = flag.Bool("cached-vars", true, "use the variables from the cache when present")
 		cachedCmds = flag.Bool("cached-cmds", true, "don't execute commands when they didn't change since last execution")
 		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")

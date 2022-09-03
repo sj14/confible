@@ -43,7 +43,7 @@ func ExecNoCache(cmd string, stdout io.Writer) error {
 	c := exec.Command("sh", "-c", cmd)
 
 	if runtime.GOOS == "windows" {
-		c = exec.Command("cmd", "/C", cmd) // TODO: untested
+		c = exec.Command("cmd", "/C", cmd)
 	}
 	c.Stderr = os.Stderr
 	c.Stdout = stdout
