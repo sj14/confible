@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/sj14/confible/internal/cache"
+	"github.com/sj14/confible/internal/command"
 	"github.com/sj14/confible/internal/confible"
 )
 
@@ -20,17 +20,11 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 	}
 
 	for _, variables := range variables {
-		// variables from commands
-		// TODO: combine with command.Exec()
 		for _, cmd := range variables.Exec {
 			output := &bytes.Buffer{}
 
-			c := exec.Command("sh", "-c", cmd.Cmd)
-			c.Stderr = os.Stderr
-			c.Stdout = output
-
-			if err := c.Run(); err != nil {
-				return nil, fmt.Errorf("failed running command '%v': %v", cmd, err)
+			if err := command.ExecNoCache(cmd.Cmd, output); err != nil {
+				return nil, err
 			}
 
 			cacheInstance.UpsertVar(id, cmd.VariableName, output.String())

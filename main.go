@@ -22,10 +22,10 @@ var (
 
 func main() {
 	var (
-		noCommands = flag.Bool("no-cmd", false, "do not exec any commands")
-		noConfig   = flag.Bool("no-cfg", false, "do not apply any configs")
+		cmdFlag    = flag.Bool("cmd", true, "exec commands")
+		cfgFlag    = flag.Bool("cfg", true, "apply configs")
 		cachedVars = flag.Bool("cached-vars", true, "use the variables from the cache when present")
-		cachedCmds = flag.Bool("cached-commands", true, "don't execute commands when they didn't change since last execution")
+		cachedCmds = flag.Bool("cached-cmds", true, "don't execute commands when they didn't change since last execution")
 		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
 		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
@@ -59,12 +59,12 @@ func main() {
 		mode = config.ModeCleanAll
 	}
 
-	if err := processConfibleFiles(flag.Args(), *noCommands, *noConfig, *cachedCmds, *cachedVars, mode); err != nil {
+	if err := processConfibleFiles(flag.Args(), *cmdFlag, *cfgFlag, *cachedCmds, *cachedVars, mode); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func processConfibleFiles(configPaths []string, noCommands, noConfig, cachedCmds, useCachedVars bool, mode config.ContentMode) error {
+func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds, useCachedVars bool, mode config.ContentMode) error {
 	for _, configPath := range configPaths {
 		log.Printf("processing config %q\n", configPath)
 
@@ -85,13 +85,13 @@ func processConfibleFiles(configPaths []string, noCommands, noConfig, cachedCmds
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
 
-		if !noCommands && mode == config.ModeNormal {
+		if execCmds && mode == config.ModeNormal {
 			if err := command.Exec(cfg.ID, cfg.Commands, cachedCmds); err != nil {
 				return err
 			}
 		}
 
-		if !noConfig {
+		if applyCfgs {
 			if err := config.ModifyTargetFiles(cfg, useCachedVars, mode); err != nil {
 				return err
 			}

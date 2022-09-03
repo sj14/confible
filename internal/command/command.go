@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -29,19 +30,26 @@ func Exec(id string, commands []confible.Command, useCache bool) error {
 	}
 	for _, commands := range commands {
 		for _, cmd := range commands.Exec {
-			c := exec.Command("sh", "-c", cmd)
-
-			if runtime.GOOS == "windows" {
-				c = exec.Command("cmd", "/C", cmd) // TODO: untested
-			}
-			c.Stderr = os.Stderr
-			c.Stdout = os.Stdout
-
-			if err := c.Run(); err != nil {
-				return fmt.Errorf("failed running command '%v': %v", cmd, err)
+			if err := ExecNoCache(cmd, os.Stdout); err != nil {
+				return err
 			}
 		}
 	}
 	cacheInstance.UpsertCommands(id, commands)
 	return cacheInstance.Store()
+}
+
+func ExecNoCache(cmd string, stdout io.Writer) error {
+	c := exec.Command("sh", "-c", cmd)
+
+	if runtime.GOOS == "windows" {
+		c = exec.Command("cmd", "/C", cmd) // TODO: untested
+	}
+	c.Stderr = os.Stderr
+	c.Stdout = stdout
+
+	if err := c.Run(); err != nil {
+		return fmt.Errorf("failed running command '%v': %v", cmd, err)
+	}
+	return nil
 }
