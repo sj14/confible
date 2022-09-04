@@ -22,8 +22,8 @@ func Exec(id string, commands []confible.Command, useCache bool) error {
 		log.Fatalln(err)
 	}
 	if useCache {
-		cmds := cacheInstance.LoadCommands(id)
-		if reflect.DeepEqual(cmds, commands) {
+		cachedCommands := cacheInstance.LoadCommands(id)
+		if reflect.DeepEqual(cachedCommands, commands) {
 			log.Printf("[%v] commands are cached", id)
 			return nil
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -191,6 +192,54 @@ func TestAggregateConfigs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := aggregateConfigs(tt.configs)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestFileContent(t *testing.T) {
+	type args struct {
+		reader io.Reader
+		id     string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "asd",
+			args: args{
+				reader: strings.NewReader(`
+some stuff before
+
+# ~~~ CONFIBLE START id: "zshrc" ~~~
+# Sun, 04 Sep 2022 12:55:13 CEST
+blablabka
+# ~~~ CONFIBLE END id: "zshrc" ~~~	
+
+some stuff after
+`),
+				id: "another id",
+			},
+			want: `some stuff before
+
+# ~~~ CONFIBLE START id: "zshrc" ~~~
+# Sun, 04 Sep 2022 12:55:13 CEST
+blablabka
+# ~~~ CONFIBLE END id: "zshrc" ~~~	
+
+some stuff after`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := fileContent(tt.args.reader, tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("fileContent() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
 			require.Equal(t, tt.want, got)
 		})
 	}

@@ -85,9 +85,9 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 	}
 
 	for _, cfg := range configs {
-		flag := os.O_CREATE
+		fileFlags := os.O_CREATE
 		if cfg.Truncate {
-			flag = os.O_CREATE | os.O_TRUNC
+			fileFlags = os.O_CREATE | os.O_TRUNC
 		}
 
 		// create folder for the target file if it doesn't exist
@@ -96,7 +96,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 		}
 
 		// open the target file (doesn't create the folder when it doesn't exit)
-		targetFile, err := os.OpenFile(cfg.Path, flag, 0o666)
+		targetFile, err := os.OpenFile(cfg.Path, fileFlags, 0o666)
 		if err != nil {
 			return fmt.Errorf("failed reading target file (%v): %v", cfg.Path, err)
 		}

@@ -22,14 +22,14 @@ var (
 
 func main() {
 	var (
-		cmdFlag    = flag.Bool("cmds", true, "exec commands")
-		cfgFlag    = flag.Bool("cfgs", true, "apply configs")
+		applyCmds  = flag.Bool("apply-cmds", true, "exec commands")
+		applyCfgs  = flag.Bool("apply-cfgs", true, "apply configs")
 		cachedVars = flag.Bool("cached-vars", true, "use the variables from the cache when present")
 		cachedCmds = flag.Bool("cached-cmds", true, "don't execute commands when they didn't change since last execution")
 		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
 		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
-		cleanCache  = flag.Bool("clean-cache", false, "remove the cache file")
+		cleanCache  = flag.Bool("clean-cache", false, "remove the cache file and exit")
 		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
@@ -59,7 +59,7 @@ func main() {
 		mode = config.ModeCleanAll
 	}
 
-	if err := processConfibleFiles(flag.Args(), *cmdFlag, *cfgFlag, *cachedCmds, *cachedVars, mode); err != nil {
+	if err := processConfibleFiles(flag.Args(), *applyCmds, *applyCfgs, *cachedCmds, *cachedVars, mode); err != nil {
 		log.Fatalln(err)
 	}
 }
