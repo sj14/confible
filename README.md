@@ -34,14 +34,20 @@ confible [flags] <config.toml> [...]
 
 ```text
  Usage of confible:
+  -apply-cfgs
+        apply configs (default true)
+  -apply-cmds
+        exec commands (default true)
+  -cached-cmds
+        don't execute commands when they didn't change since last execution (default true)
+  -cached-vars
+        use the variables from the cache when present (default true)
   -clean-all
         give a confible file and it will remove all configs from the targets
+  -clean-cache
+        remove the cache file and exit
   -clean-id
         give a confible file and it will remove the config from configured targets matching the config id
-  -no-cfg
-        do not apply any configs
-  -no-cmd
-        do not exec any commands
   -version
         print version information
 ```
