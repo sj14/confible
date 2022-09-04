@@ -29,7 +29,7 @@ func main() {
 		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
 		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
-		cleanCache  = flag.Bool("clean-cache", false, "remove the cache file and exit")
+		cleanCache  = flag.Bool("clean-cache", false, "remove the cache file")
 		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
@@ -38,16 +38,10 @@ func main() {
 		fmt.Printf("version: %v\n", version)
 		fmt.Printf("commit: %v\n", commit)
 		fmt.Printf("date: %v\n", date)
-		os.Exit(0)
 	}
 
 	if *cleanCache {
 		cache.Clean()
-		os.Exit(0)
-	}
-
-	if flag.NArg() < 1 {
-		log.Fatalln("need at least one config file")
 	}
 
 	mode := config.ModeNormal

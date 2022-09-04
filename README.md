@@ -45,7 +45,7 @@ confible [flags] <config.toml> [...]
   -clean-all
         give a confible file and it will remove all configs from the targets
   -clean-cache
-        remove the cache file and exit
+        remove the cache file
   -clean-id
         give a confible file and it will remove the config from configured targets matching the config id
   -version
