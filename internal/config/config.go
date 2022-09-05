@@ -75,7 +75,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 
 	if mode == ModeNormal {
 		// only create template when we are not in a clean mode
-		variableMap, err := variable.Parse(confibleFile.ID, confibleFile.Variables, useCached)
+		variableMap, err := variable.Parse(confibleFile.Settings.ID, confibleFile.Variables, useCached)
 		if err != nil {
 			return err
 		}
@@ -108,7 +108,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 		var newContent string
 		switch mode {
 		case ModeNormal:
-			newContent, err = modifyContent(targetFile, confibleFile.Priority, confibleFile.ID, cfg.Comment, cfg.Append, td, time.Now())
+			newContent, err = modifyContent(targetFile, confibleFile.Settings.Priority, confibleFile.Settings.ID, cfg.Comment, cfg.Append, td, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
@@ -124,7 +124,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 			if mode == ModeCleanID {
 				for _, existingCfg := range existingConfigs {
 					// we want to clean this config
-					if existingCfg.id == confibleFile.ID {
+					if existingCfg.id == confibleFile.Settings.ID {
 						continue
 					}
 					// but append all other configs
@@ -139,7 +139,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 		if err := os.WriteFile(cfg.Path, []byte(newContent), os.ModePerm); err != nil {
 			return fmt.Errorf("failed writing target file (%v): %v", cfg.Path, err)
 		}
-		log.Printf("[%v] wrote config to %q\n", confibleFile.ID, cfg.Path)
+		log.Printf("[%v] wrote config to %q\n", confibleFile.Settings.ID, cfg.Path)
 	}
 	return nil
 }

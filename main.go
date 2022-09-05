@@ -75,15 +75,15 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 			return fmt.Errorf("failed unmarshalling config file: %v", err)
 		}
 
-		if cfg.ID == "" {
+		if cfg.Settings.ID == "" {
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
-		if cfg.Priority == 0 {
-			cfg.Priority = config.DefaultPriority
+		if cfg.Settings.Priority == 0 {
+			cfg.Settings.Priority = config.DefaultPriority
 		}
 
 		if execCmds && mode == config.ModeNormal {
-			if err := command.Exec(cfg.ID, cfg.Commands, cachedCmds); err != nil {
+			if err := command.Exec(cfg.Settings.ID, cfg.Commands, cachedCmds); err != nil {
 				return err
 			}
 		}

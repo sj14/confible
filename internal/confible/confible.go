@@ -1,11 +1,15 @@
 package confible
 
 type File struct {
-	ID        string     `toml:"id"`
-	Priority  int64      `toml:"priority"`
+	Settings  Settings   `toml:"settings"`
 	Configs   []Config   `toml:"config"`
 	Commands  []Command  `toml:"commands"`
 	Variables []Variable `toml:"variables"`
+}
+
+type Settings struct {
+	ID       string `toml:"id"`
+	Priority int64  `toml:"priority"`
 }
 
 type Config struct {

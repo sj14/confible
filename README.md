@@ -55,6 +55,7 @@ confible [flags] <config.toml> [...]
 ## Example
 
 ```toml
+[settings]
 id = "vimrc"
 
 [[commands]]
@@ -113,6 +114,7 @@ Variables can be assigned by executing commands or based on manual inputs.
 Executing the following example will wait for you to input your name and age.
 
 ```toml
+[settings]
 id = "variables"
 
 [[variables]]
@@ -140,8 +142,8 @@ I want to say {{ .Var.say }}
 ## Config Specification
 
 ```toml
+[settings]
 id = "some unique identifier" # the ID allows to execute different configs to the same path 
-
 priority = 1000 # the position of the config written to the target. Lower values are sorted before other confible parts. Default: 1000 (optional)
 
 [[commands]]
