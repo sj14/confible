@@ -2,6 +2,7 @@ package confible
 
 type File struct {
 	ID        string     `toml:"id"`
+	Priority  int64      `toml:"priority"`
 	Configs   []Config   `toml:"config"`
 	Commands  []Command  `toml:"commands"`
 	Variables []Variable `toml:"variables"`

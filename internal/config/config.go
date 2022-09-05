@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"os"
 	"path/filepath"
+	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -106,19 +109,28 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentM
 		var newContent string
 		switch mode {
 		case ModeNormal:
-			newContent, err = modifyContent(targetFile, confibleFile.ID, cfg.Comment, cfg.Append, td, time.Now())
+			newContent, err = modifyContent(targetFile, confibleFile.Priority, confibleFile.ID, cfg.Comment, cfg.Append, td, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
-		case ModeCleanID:
-			newContent, err = fileContent(targetFile, confibleFile.ID)
+		case ModeCleanID, ModeCleanAll:
+			var existingConfigs []confibleConfig
+			newContent, existingConfigs, err = fileContent(targetFile)
 			if err != nil {
 				return fmt.Errorf("failed cleaning id config: %w", err)
 			}
-		case ModeCleanAll:
-			newContent, err = fileContent(targetFile, "")
-			if err != nil {
-				return fmt.Errorf("failed cleaning all config: %w", err)
+
+			// ModeCleanAll: we are done, just newContent is enough
+
+			if mode == ModeCleanID {
+				for _, existingCfg := range existingConfigs {
+					// we want to clean this config
+					if existingCfg.id == confibleFile.ID {
+						continue
+					}
+					// but append all other configs
+					newContent = newContent + "\n" + existingCfg.content
+				}
 			}
 		default:
 			return fmt.Errorf("wrong or no mode specified")
@@ -141,54 +153,98 @@ const (
 	ModeCleanAll
 )
 
-func fileContent(reader io.Reader, id string) (string, error) {
+type confibleConfig struct {
+	id       string
+	priority int64
+	content  string
+}
+
+func fileContent(reader io.Reader) (string, []confibleConfig, error) {
 	content := strings.Builder{}
+	existingConfigs := []confibleConfig{}
+	existingConfig := confibleConfig{}
+	// existingConfigBuilder := strings.Builder{}
 
 	// read the already existing file content
 	scanner := bufio.NewScanner(reader)
-	skip := false
+	processingAnExistingConfig := false
 	for scanner.Scan() {
-		lookForStart := header
-		if id != "" {
-			lookForStart = generateHeaderWithID(id)
-		}
 		// we reached our/any own old confible config, do not copy our old config
-		if strings.Contains(scanner.Text(), lookForStart) {
+		if strings.Contains(scanner.Text(), header) {
+			existingConfig.id = extractID(scanner.Text())
+			existingConfig.priority = extractPriority(scanner.Text())
+			existingConfig.content = existingConfig.content + "\n\n"
+
 			// some cleaning when we multiple confible configs write to the same file
 			// otherwise each execution would increase the blank lines
 			cacheNewContent := strings.TrimSpace(content.String())
 			content.Reset()
 			content.WriteString(cacheNewContent + "\n\n")
-			skip = true
+			processingAnExistingConfig = true
 		}
 
-		lookForEnd := footer
-		if id != "" {
-			lookForEnd = generateFooterWithID(id)
-		}
 		// our/any own old confible config was read, continue copying the other content
-		if strings.Contains(scanner.Text(), lookForEnd) {
-			skip = false
+		if strings.Contains(scanner.Text(), footer) {
+			processingAnExistingConfig = false
+			existingConfig.content = existingConfig.content + scanner.Text() + "\n\n\n"
+			existingConfigs = append(existingConfigs, existingConfig)
+			existingConfig = confibleConfig{}
 			continue
 		}
 
-		if skip {
+		if processingAnExistingConfig {
+			existingConfig.content = existingConfig.content + scanner.Text() + "\n"
 			continue
 		}
 
 		if _, err := content.Write(append(scanner.Bytes(), '\n')); err != nil {
-			return "", err
+			return "", existingConfigs, err
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return "", err
+		return "", existingConfigs, err
 	}
 
-	return strings.TrimSpace(content.String()), nil
+	return strings.TrimSpace(content.String()), existingConfigs, nil
 }
 
 func generateHeaderWithID(id string) string {
 	return fmt.Sprintf(header+" id: %q", id)
+}
+
+func generateHeaderWithIDAndPriority(id string, priority int64) string {
+	return fmt.Sprintf(generateHeaderWithID(id)+" priority: \"%v\"", priority)
+}
+
+func extractX(s, startString string) string {
+	idxStart := strings.Index(s, startString)
+	if idxStart == -1 {
+		return ""
+	}
+	start := s[idxStart:]
+	start = strings.TrimPrefix(start, startString)
+	idxEnd := strings.Index(start, "\"")
+	if idxEnd == -1 {
+		return ""
+	}
+	return start[:idxEnd]
+}
+
+func extractID(s string) string {
+	return extractX(s, "id: \"")
+}
+
+func extractPriority(s string) int64 {
+	priorityStr := extractX(s, "priority: \"")
+	if priorityStr == "" {
+		return math.MaxInt64
+	}
+
+	priority, err := strconv.ParseInt(priorityStr, 10, 64)
+	if err != nil {
+		log.Fatalf("failed extracting priority from %q\n", s)
+	}
+	return priority
 }
 
 func generateFooterWithID(id string) string {
@@ -200,16 +256,19 @@ type TemplateData struct {
 	Var map[string]string
 }
 
-func modifyContent(reader io.Reader, id, comment, appendText string, td TemplateData, now time.Time) (string, error) {
-	oldContent, err := fileContent(reader, id)
+func modifyContent(reader io.Reader, priority int64, id, comment, appendText string, td TemplateData, now time.Time) (string, error) {
+	oldC, oldConfigs, err := fileContent(reader)
 	if err != nil {
 		return "", err
 	}
 
+	oldContent := strings.Builder{}
+	oldContent.WriteString(oldC)
+
 	var newContent = strings.Builder{}
-	if _, err = newContent.WriteString(oldContent); err != nil {
-		return "", err
-	}
+	// if _, err = newContent.WriteString(oldContent.String()); err != nil {
+	// 	return "", err
+	// }
 
 	// Add blank line before confible part (only when the target file is not empty)
 	if strings.TrimSpace(newContent.String()) != "" {
@@ -219,7 +278,7 @@ func modifyContent(reader io.Reader, id, comment, appendText string, td Template
 	}
 
 	// header
-	if _, err := newContent.WriteString(comment + " ~~~ " + generateHeaderWithID(id) + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
+	if _, err := newContent.WriteString(comment + " ~~~ " + generateHeaderWithIDAndPriority(id, priority) + " ~~~\n" + comment + " " + now.Format(time.RFC1123) + "\n"); err != nil {
 		return "", err
 	}
 
@@ -238,5 +297,35 @@ func modifyContent(reader io.Reader, id, comment, appendText string, td Template
 		return "", err
 	}
 
-	return newContent.String(), nil
+	newConfig := confibleConfig{
+		id:       id,
+		priority: priority,
+		content:  newContent.String(),
+	}
+
+	newConfigs := []confibleConfig{}
+
+	// delete old config with same id
+	for _, cfg := range oldConfigs {
+		if cfg.id == id {
+			continue
+		}
+		newConfigs = append(newConfigs, cfg)
+	}
+
+	// append new config
+	newConfigs = append(newConfigs, newConfig)
+
+	// sort configs by priority
+	sort.Slice(newConfigs, func(i, j int) bool {
+		return newConfigs[i].priority < newConfigs[j].priority
+	})
+
+	// append configs to new content
+	oldContent.WriteString("\n\n")
+	for _, cfg := range newConfigs {
+		oldContent.WriteString(strings.TrimSpace(cfg.content) + "\n\n")
+	}
+
+	return strings.TrimSpace(oldContent.String()), nil
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"io"
+	"math"
 	"os"
 	"strings"
 	"testing"
@@ -17,6 +18,7 @@ func TestAppendContent(t *testing.T) {
 	type args struct {
 		reader     io.Reader
 		id         string
+		priority   int64
 		comment    string
 		appendText string
 		now        time.Time
@@ -40,13 +42,12 @@ func TestAppendContent(t *testing.T) {
 				comment:    "//",
 				appendText: "new line 1\n{{ .Env.TEST_ENV }}\nnew line 2",
 			},
-			want: `// ~~~ CONFIBLE START id: "123" ~~~
+			want: `// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 YOLO!!1
 new line 2
-// ~~~ CONFIBLE END id: "123" ~~~
-`,
+// ~~~ CONFIBLE END id: "123" ~~~`,
 		},
 		{
 			name: "empty file",
@@ -56,12 +57,11 @@ new line 2
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
-			want: `// ~~~ CONFIBLE START id: "123" ~~~
+			want: `// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END id: "123" ~~~
-`,
+// ~~~ CONFIBLE END id: "123" ~~~`,
 		},
 		{
 			name: "untouched file",
@@ -74,12 +74,11 @@ new line 2
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START id: "123" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END id: "123" ~~~
-`,
+// ~~~ CONFIBLE END id: "123" ~~~`,
 		},
 		{
 			name: "touched file",
@@ -88,13 +87,12 @@ new line 2
 first line
 second line
 
-// ~~~ CONFIBLE START id: "123" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 existing line 1
 existing line 2
 existing line 3
-// ~~~ CONFIBLE END id: "123" ~~~
-`),
+// ~~~ CONFIBLE END id: "123" ~~~`),
 				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
@@ -102,12 +100,11 @@ existing line 3
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START id: "123" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END id: "123" ~~~
-`,
+// ~~~ CONFIBLE END id: "123" ~~~`,
 		},
 		{
 			name: "config with other id",
@@ -116,12 +113,11 @@ new line 2
 first line
 second line
 
-// ~~~ CONFIBLE START id: "another config" ~~~
+// ~~~ CONFIBLE START id: "another config" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 That's not your config yo!
 Just leave me here!
-// ~~~ CONFIBLE END id: "another config" ~~~
-`),
+// ~~~ CONFIBLE END id: "another config" ~~~`),
 				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
@@ -129,18 +125,17 @@ Just leave me here!
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START id: "another config" ~~~
+// ~~~ CONFIBLE START id: "another config" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 That's not your config yo!
 Just leave me here!
 // ~~~ CONFIBLE END id: "another config" ~~~
 
-// ~~~ CONFIBLE START id: "123" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END id: "123" ~~~
-`,
+// ~~~ CONFIBLE END id: "123" ~~~`,
 		},
 	}
 	for _, tt := range tests {
@@ -149,7 +144,7 @@ new line 2
 				tt.customSetup()
 			}
 
-			got, err := modifyContent(tt.args.reader, tt.args.id, tt.args.comment, tt.args.appendText, TemplateData{Env: utils.GetEnvMap()}, tt.args.now)
+			got, err := modifyContent(tt.args.reader, tt.args.priority, tt.args.id, tt.args.comment, tt.args.appendText, TemplateData{Env: utils.GetEnvMap()}, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendContent() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -203,13 +198,14 @@ func TestFileContent(t *testing.T) {
 		id     string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    string
-		wantErr bool
+		name        string
+		args        args
+		wantContent string
+		wantConfigs []confibleConfig
+		wantErr     bool
 	}{
 		{
-			name: "asd",
+			name: "basic",
 			args: args{
 				reader: strings.NewReader(`
 some stuff before
@@ -219,28 +215,52 @@ some stuff before
 blablabka
 # ~~~ CONFIBLE END id: "zshrc" ~~~	
 
-some stuff after
-`),
+some stuff after`),
 				id: "another id",
 			},
-			want: `some stuff before
+			wantContent: `some stuff before
 
-# ~~~ CONFIBLE START id: "zshrc" ~~~
-# Sun, 04 Sep 2022 12:55:13 CEST
-blablabka
-# ~~~ CONFIBLE END id: "zshrc" ~~~	
 
 some stuff after`,
+			wantConfigs: []confibleConfig{
+				{
+					id:       "zshrc",
+					priority: math.MaxInt64,
+					content:  "\n\n# ~~~ CONFIBLE START id: \"zshrc\" ~~~\n# Sun, 04 Sep 2022 12:55:13 CEST\nblablabka\n# ~~~ CONFIBLE END id: \"zshrc\" ~~~\t\n\n\n",
+				},
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := fileContent(tt.args.reader, tt.args.id)
+			gotContent, gotConfigs, err := fileContent(tt.args.reader)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("fileContent() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			require.Equal(t, tt.want, got)
+			require.Equal(t, tt.wantContent, gotContent)
+			require.Equal(t, tt.wantConfigs, gotConfigs)
+		})
+	}
+}
+
+func TestExtractPriority(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want int64
+	}{
+		{
+			name: "",
+			s:    "# ~~~ CONFIBLE START id: \"zshrc\" priority: \"10\" ~~",
+			want: 10,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := extractPriority(tt.s); got != tt.want {
+				t.Errorf("extractPriority() = %v, want %v", got, tt.want)
+			}
 		})
 	}
 }
