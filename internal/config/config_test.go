@@ -229,6 +229,44 @@ some stuff after`,
 				},
 			},
 		},
+		{
+			name: "several configs",
+			args: args{
+				reader: strings.NewReader(`
+some stuff before
+
+# ~~~ CONFIBLE START id: "zshrc" priority: "55" ~~~
+# Sun, 04 Sep 2022 12:55:13 CEST
+blablabka
+# ~~~ CONFIBLE END id: "zshrc" ~~~	
+
+# ~~~ CONFIBLE START id: "other" priority: "44" ~~~
+# Sun, 04 Sep 2022 12:55:14 CEST
+yolo yolo
+# ~~~ CONFIBLE END id: "other" ~~~	
+
+
+some stuff after`),
+				id: "another id",
+			},
+			wantContent: `some stuff before
+
+
+
+some stuff after`,
+			wantConfigs: []confibleConfig{
+				{
+					id:       "zshrc",
+					priority: 55,
+					content:  "\n\n# ~~~ CONFIBLE START id: \"zshrc\" priority: \"55\" ~~~\n# Sun, 04 Sep 2022 12:55:13 CEST\nblablabka\n# ~~~ CONFIBLE END id: \"zshrc\" ~~~\t\n\n\n",
+				},
+				{
+					id:       "other",
+					priority: 44,
+					content:  "\n\n# ~~~ CONFIBLE START id: \"other\" priority: \"44\" ~~~\n# Sun, 04 Sep 2022 12:55:14 CEST\nyolo yolo\n# ~~~ CONFIBLE END id: \"other\" ~~~\t\n\n\n",
+				},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
