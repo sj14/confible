@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -234,10 +233,12 @@ func extractID(s string) string {
 	return extractX(s, "id: \"")
 }
 
+var DefaultPriority int64 = 1000
+
 func extractPriority(s string) int64 {
 	priorityStr := extractX(s, "priority: \"")
 	if priorityStr == "" {
-		return math.MaxInt64
+		return DefaultPriority
 	}
 
 	priority, err := strconv.ParseInt(priorityStr, 10, 64)

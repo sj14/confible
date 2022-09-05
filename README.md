@@ -142,6 +142,8 @@ I want to say {{ .Var.say }}
 ```toml
 id = "some unique identifier" # the ID allows to execute different configs to the same path 
 
+priority = 1000 # the position of the config written to the target. Lower values are sorted before other confible parts. Default: 1000 (optional)
+
 [[commands]]
 exec = [
     "echo yo", 

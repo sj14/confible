@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"io"
-	"math"
 	"os"
 	"strings"
 	"testing"
@@ -225,7 +224,7 @@ some stuff after`,
 			wantConfigs: []confibleConfig{
 				{
 					id:       "zshrc",
-					priority: math.MaxInt64,
+					priority: DefaultPriority,
 					content:  "\n\n# ~~~ CONFIBLE START id: \"zshrc\" ~~~\n# Sun, 04 Sep 2022 12:55:13 CEST\nblablabka\n# ~~~ CONFIBLE END id: \"zshrc\" ~~~\t\n\n\n",
 				},
 			},

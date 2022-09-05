@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"os"
 
 	"github.com/pelletier/go-toml/v2"
@@ -80,7 +79,7 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
 		if cfg.Priority == 0 {
-			cfg.Priority = math.MaxInt64
+			cfg.Priority = config.DefaultPriority
 		}
 
 		if execCmds && mode == config.ModeNormal {
