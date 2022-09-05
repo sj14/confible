@@ -112,29 +112,30 @@ new line 2
 first line
 second line
 
-// ~~~ CONFIBLE START id: "another config" priority: "0" ~~~
+// ~~~ CONFIBLE START id: "another config" priority: "2" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 That's not your config yo!
 Just leave me here!
 // ~~~ CONFIBLE END id: "another config" ~~~`),
 				id:         "123",
+				priority:   1,
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START id: "another config" priority: "0" ~~~
-// Mon, 01 Jan 0001 00:00:00 UTC
-That's not your config yo!
-Just leave me here!
-// ~~~ CONFIBLE END id: "another config" ~~~
-
-// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "1" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
-// ~~~ CONFIBLE END id: "123" ~~~`,
+// ~~~ CONFIBLE END id: "123" ~~~
+
+// ~~~ CONFIBLE START id: "another config" priority: "2" ~~~
+// Mon, 01 Jan 0001 00:00:00 UTC
+That's not your config yo!
+Just leave me here!
+// ~~~ CONFIBLE END id: "another config" ~~~`,
 		},
 	}
 	for _, tt := range tests {
