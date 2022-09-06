@@ -66,7 +66,10 @@ func getCacheFilepath() string {
 	case "darwin":
 		return utils.AbsFilepath("~/Library/Preferences/confible.cache")
 	case "linux":
-		return os.ExpandEnv("$XDG_CONFIG_DIRS/confible.cache")
+		if os.Getenv("XDG_CONFIG_DIRS") != "" {
+			return os.ExpandEnv("$XDG_CONFIG_DIRS/confible.cache")
+		}
+		return os.ExpandEnv("$HOME/.confible.cache")
 	case "windows":
 		return os.ExpandEnv("$LOCALAPPDATA\\confible.cache")
 	default:
