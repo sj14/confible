@@ -13,8 +13,8 @@ import (
 	"github.com/sj14/confible/internal/confible"
 )
 
-func Parse(id string, variables []confible.Variable, useCached bool) (map[string]string, error) {
-	cacheInstance, err := cache.Load()
+func Parse(id string, variables []confible.Variable, useCached bool, cacheFilepath string) (map[string]string, error) {
+	cacheInstance, err := cache.New(cacheFilepath)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -59,5 +59,5 @@ func Parse(id string, variables []confible.Variable, useCached bool) (map[string
 			cacheInstance.UpsertVar(id, input.VariableName, text)
 		}
 	}
-	return cacheInstance.LoadVars(id), cacheInstance.Store()
+	return cacheInstance.LoadVars(id), cacheInstance.Store(cacheFilepath)
 }

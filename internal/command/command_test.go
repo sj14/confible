@@ -2,9 +2,11 @@ package command
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/sj14/confible/internal/confible"
+	"github.com/stretchr/testify/require"
 )
 
 func TestExecNoCache(t *testing.T) {
@@ -36,27 +38,44 @@ func TestExecNoCache(t *testing.T) {
 
 func TestExec(t *testing.T) {
 	type args struct {
-		id       string
-		commands []confible.Command
-		useCache bool
+		id        string
+		commands  []confible.Command
+		useCache  bool
+		cachePath string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
+		name     string
+		args     args
+		wantErr  bool
+		teardown func()
 	}{
 		{
-			name: "happy",
+			name: "happy no cache",
 			args: args{
-				id:       "happy",
+				id:       "happy no cache",
 				commands: []confible.Command{{Exec: []string{"echo 'Hello World'"}}},
 				useCache: false,
 			},
 		},
+		{
+			name: "happy with cache",
+			args: args{
+				id:        "happy with cache",
+				commands:  []confible.Command{{Exec: []string{"echo 'Hello World'"}}},
+				useCache:  true,
+				cachePath: ".testcache",
+			},
+			teardown: func() { require.Nil(t, os.Remove(".testcache")) },
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := Exec(tt.args.id, tt.args.commands, tt.args.useCache); (err != nil) != tt.wantErr {
+			defer func() {
+				if tt.teardown != nil {
+					tt.teardown()
+				}
+			}()
+			if err := Exec(tt.args.id, tt.args.commands, tt.args.useCache, tt.args.cachePath); (err != nil) != tt.wantErr {
 				t.Errorf("Exec() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

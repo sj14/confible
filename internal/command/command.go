@@ -13,15 +13,16 @@ import (
 	"github.com/sj14/confible/internal/confible"
 )
 
-func Exec(id string, commands []confible.Command, useCache bool) error {
+func Exec(id string, commands []confible.Command, useCache bool, cacheFilepath string) (err error) {
 	if len(commands) == 0 {
 		return nil
 	}
-	cacheInstance, err := cache.Load()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	var cacheInstance *cache.Cache
 	if useCache {
+		cacheInstance, err = cache.New(cacheFilepath)
+		if err != nil {
+			log.Fatalln(err)
+		}
 		cachedCommands := cacheInstance.LoadCommands(id)
 		if reflect.DeepEqual(cachedCommands, commands) {
 			log.Printf("[%v] commands are cached", id)
@@ -35,8 +36,13 @@ func Exec(id string, commands []confible.Command, useCache bool) error {
 			}
 		}
 	}
-	cacheInstance.UpsertCommands(id, commands)
-	return cacheInstance.Store()
+	if useCache {
+		cacheInstance.UpsertCommands(id, commands)
+		if err := cacheInstance.Store(cacheFilepath); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ExecNoCache(cmd string, stdout io.Writer) error {

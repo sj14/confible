@@ -68,14 +68,14 @@ func aggregateConfigs(configs []confible.Config) []confible.Config {
 	return aggregated
 }
 
-func ModifyTargetFiles(confibleFile confible.File, useCached bool, mode ContentMode) error {
+func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath string, mode ContentMode) error {
 	configs := aggregateConfigs(confibleFile.Configs)
 
 	var td TemplateData
 
 	if mode == ModeNormal {
 		// only create template when we are not in a clean mode
-		variableMap, err := variable.Parse(confibleFile.Settings.ID, confibleFile.Variables, useCached)
+		variableMap, err := variable.Parse(confibleFile.Settings.ID, confibleFile.Variables, useCached, cacheFilepath)
 		if err != nil {
 			return err
 		}

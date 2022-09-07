@@ -38,14 +38,16 @@ confible [flags] <config.toml> [...]
         apply configs (default true)
   -apply-cmds
         exec commands (default true)
+  -cache-clean
+        remove the cache file
+  -cache-file string
+        custom path to the cache file (default "/Users/simon/Library/Preferences/confible.cache")
   -cached-cmds
         don't execute commands when they didn't change since last execution (default true)
   -cached-vars
         use the variables from the cache when present (default true)
   -clean-all
         give a confible file and it will remove all configs from the targets
-  -clean-cache
-        remove the cache file
   -clean-id
         give a confible file and it will remove the config from configured targets matching the config id
   -version
