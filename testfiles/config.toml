@@ -1,0 +1,14 @@
+[settings]
+id = "config"
+
+[[config]]
+path = "testfiles/config.txt"
+#truncate = true
+comment_symbol = "#"
+append = """
+my_key=42
+my_key=43
+my_key=44
+
+My User is: {{ .Env.USER }}
+"""

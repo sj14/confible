@@ -1,8 +1,8 @@
-# ~~~ CONFIBLE START id: "variables" ~~~
-# Thu, 01 Sep 2022 16:03:20 CEST
+# ~~~ CONFIBLE START id: "variables" priority: "1000" ~~~
+# Sat, 10 Sep 2022 13:41:07 CEST
 My User is: simon
-My Nick is Simon
-I am 33 years old
-Today is Do  1 Sep 2022 16:03:18 CEST
+My Nick is hans
+I am 54 years old
+Today is Sa 10 Sep 2022 13:41:07 CEST
 I want to say Hello World!
 # ~~~ CONFIBLE END id: "variables" ~~~

@@ -1,0 +1,8 @@
+# ~~~ CONFIBLE START id: "config" priority: "1000" ~~~
+# Sat, 10 Sep 2022 13:41:07 CEST
+my_key=42
+my_key=43
+my_key=44
+
+My User is: simon
+# ~~~ CONFIBLE END id: "config" ~~~
