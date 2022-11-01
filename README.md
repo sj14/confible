@@ -80,7 +80,7 @@ filetype indent plugin on
 Beside the `hello` and `world` outputs from the `[[commands]]` section, the `[[config]]` section will result into the below shown `.vimrc` file.  
 Feel free to adjust the config and rerun `confible` for updating the `.vimrc` to the latest version.
 
-```text
+```vim
 ...
 content not handled by confible
 ...
