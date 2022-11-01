@@ -118,9 +118,8 @@ func (c *Cache) load() error {
 	defer cacheFile.Close()
 
 	// read the old cache
-	decoder := gob.NewDecoder(cacheFile)
 	gobCache := cacheGob{}
-	if err := decoder.Decode(&gobCache); err != nil && err != io.EOF {
+	if err := gob.NewDecoder(cacheFile).Decode(&gobCache); err != nil && err != io.EOF {
 		return fmt.Errorf("failed decoding confible cache: %v", err)
 	}
 
