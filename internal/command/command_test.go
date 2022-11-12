@@ -3,6 +3,7 @@ package command
 import (
 	"bytes"
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/sj14/confible/internal/confible"
@@ -77,6 +78,90 @@ func TestExec(t *testing.T) {
 			}()
 			if err := Exec(tt.args.id, tt.args.commands, tt.args.useCache, tt.args.cachePath); (err != nil) != tt.wantErr {
 				t.Errorf("Exec() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestExtract(t *testing.T) {
+	type args struct {
+		cmds         []confible.Command
+		runAfterCfgs bool
+	}
+	tests := []struct {
+		name string
+		args args
+		want []confible.Command
+	}{
+		{
+			name: "before/start with before",
+			args: args{
+				runAfterCfgs: false,
+				cmds: []confible.Command{
+					{AfterConfigs: false, Exec: []string{"before1"}},
+					{AfterConfigs: true, Exec: []string{"after1"}},
+					{AfterConfigs: false, Exec: []string{"before2"}},
+					{AfterConfigs: true, Exec: []string{"after2"}},
+				},
+			},
+			want: []confible.Command{
+				{AfterConfigs: false, Exec: []string{"before1"}},
+				{AfterConfigs: false, Exec: []string{"before2"}},
+			},
+		},
+		{
+			name: "before/start with after",
+			args: args{
+				runAfterCfgs: false,
+				cmds: []confible.Command{
+					{AfterConfigs: true, Exec: []string{"after1"}},
+					{AfterConfigs: false, Exec: []string{"before1"}},
+					{AfterConfigs: true, Exec: []string{"after2"}},
+					{AfterConfigs: false, Exec: []string{"before2"}},
+				},
+			},
+			want: []confible.Command{
+				{AfterConfigs: false, Exec: []string{"before1"}},
+				{AfterConfigs: false, Exec: []string{"before2"}},
+			},
+		},
+		{
+			name: "after/start with before",
+			args: args{
+				runAfterCfgs: true,
+				cmds: []confible.Command{
+					{AfterConfigs: false, Exec: []string{"before1"}},
+					{AfterConfigs: true, Exec: []string{"after1"}},
+					{AfterConfigs: false, Exec: []string{"before2"}},
+					{AfterConfigs: true, Exec: []string{"after2"}},
+				},
+			},
+			want: []confible.Command{
+				{AfterConfigs: true, Exec: []string{"after1"}},
+				{AfterConfigs: true, Exec: []string{"after2"}},
+			},
+		},
+		{
+			name: "after/start with after",
+			args: args{
+				runAfterCfgs: true,
+				cmds: []confible.Command{
+					{AfterConfigs: true, Exec: []string{"after1"}},
+					{AfterConfigs: false, Exec: []string{"before1"}},
+					{AfterConfigs: true, Exec: []string{"after2"}},
+					{AfterConfigs: false, Exec: []string{"before2"}},
+				},
+			},
+			want: []confible.Command{
+				{AfterConfigs: true, Exec: []string{"after1"}},
+				{AfterConfigs: true, Exec: []string{"after2"}},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Extract(tt.args.cmds, tt.args.runAfterCfgs); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Extract() = %v, want %v", got, tt.want)
 			}
 		})
 	}

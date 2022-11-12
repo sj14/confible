@@ -145,22 +145,33 @@ I want to say {{ .Var.say }}
 
 ```toml
 [settings]
-id = "some unique identifier" # the ID allows to execute different configs to the same path 
-priority = 1000 # the position of the config written to the target. Lower values are sorted before other confible parts. Default: 1000 (optional)
+# the ID allows to execute different configs to the same path
+id = "some unique identifier"
+# The position of the config written to the target.
+# Lower values are sorted before other confible parts. Default: "1000" (optional)
+priority = 1000
+
 
 [[commands]]
+# Run the commands before writing the configs Default: "false" (optional).
+# Set to "true" to run the commands after the configs were written. 
+after_configs = false 
 exec = [
     "echo yo", 
     "echo yoyo",
 ]
 
+
 [[config]]
 path = "path/to/target"
-truncate = false      # enable for erasing target file beforehand (optional)
-comment_symbol = "//" # symbol which is recognized as a comment by the target file
+# Enable truncate for erasing target file beforehand. Default: "false" (optional).
+truncate = false
+# Symbol which is recognized as a comment by the target file.
+comment_symbol = "//" 
 append = """
 what you want to add
 """
+
 
 # variables which can be used in the [[config]] parts (see templating)
 [[variables]]
