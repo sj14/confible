@@ -13,6 +13,23 @@ import (
 	"github.com/sj14/confible/internal/confible"
 )
 
+func Extract(cmds []confible.Command, runAfterCfgs bool) []confible.Command {
+	var result []confible.Command
+
+	for _, cmd := range cmds {
+		// extract all commands which should run after configs were written
+		if runAfterCfgs && cmd.AfterConfigs {
+			result = append(result, cmd)
+			continue
+		}
+		// extract all commands which should run before configs were written
+		if !runAfterCfgs && !cmd.AfterConfigs {
+			result = append(result, cmd)
+		}
+	}
+	return result
+}
+
 func Exec(id string, commands []confible.Command, useCache bool, cacheFilepath string) (err error) {
 	if len(commands) == 0 {
 		return nil

@@ -83,14 +83,22 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 			cfg.Settings.Priority = config.DefaultPriority
 		}
 
+		// commands which should run before the configs were written
 		if execCmds && mode == config.ModeNormal {
-			if err := command.Exec(cfg.Settings.ID, cfg.Commands, cachedCmds, cacheFilepath); err != nil {
+			if err := command.Exec(cfg.Settings.ID, command.Extract(cfg.Commands, false), cachedCmds, cacheFilepath); err != nil {
 				return err
 			}
 		}
 
 		if applyCfgs {
 			if err := config.ModifyTargetFiles(cfg, useCachedVars, cacheFilepath, mode); err != nil {
+				return err
+			}
+		}
+
+		// commands which should run after the configs were written
+		if execCmds && mode == config.ModeNormal {
+			if err := command.Exec(cfg.Settings.ID, command.Extract(cfg.Commands, true), cachedCmds, cacheFilepath); err != nil {
 				return err
 			}
 		}

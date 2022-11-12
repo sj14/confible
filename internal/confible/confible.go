@@ -20,7 +20,8 @@ type Config struct {
 }
 
 type Command struct {
-	Exec []string `toml:"exec"`
+	AfterConfigs bool     `toml:"after_configs"`
+	Exec         []string `toml:"exec"`
 }
 
 type Variable struct {
