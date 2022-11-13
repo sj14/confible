@@ -152,10 +152,18 @@ id = "some unique identifier"
 # The position of the config written to the target.
 # Lower values are sorted before other confible parts. Default: "1000" (optional)
 priority = 1000
+# Filter the operating system. Only when the machines OS matches, the file gets processed.
+# When this is not set, the operating system doesn't matter. Default: "[]" (optional)
+# Possible values ($GOOS): https://go.dev/doc/install/source#environment
+os = ["darwin", "linux"]
+# Filter the machine architecture. Only when the architecture matches, the file gets processed.
+# When this is not set, the architecture doesn't matter. Default: "[]" (optional)
+# Possible values ($GOARCH): https://go.dev/doc/install/source#environment
+arch = ["amd64", "arm64"]
 
 
 [[commands]]
-# Run the commands before writing the configs Default: "false" (optional).
+# Run the commands before writing the configs. Default: "false" (optional).
 # Set to "true" to run the commands after the configs were written. 
 after_configs = false 
 exec = [

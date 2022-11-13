@@ -3,8 +3,9 @@ module github.com/sj14/confible
 go 1.18
 
 require (
-	github.com/pelletier/go-toml/v2 v2.0.3
+	github.com/pelletier/go-toml/v2 v2.0.5
 	github.com/stretchr/testify v1.8.0
+	golang.org/x/exp v0.0.0-20221111204811-129d8d6c17ab
 )
 
 require (
