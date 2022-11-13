@@ -99,6 +99,17 @@ func New(path string) (*Cache, error) {
 	return c, c.load()
 }
 
+func (c *Cache) ListVars() {
+	for id, variables := range c.variables {
+		fmt.Printf("id: %v\n", id)
+		fmt.Println("---")
+		for key, value := range variables {
+			fmt.Printf("%v: %v\n", key, value)
+		}
+		fmt.Println()
+	}
+}
+
 func (c *Cache) load() error {
 	cacheFile, err := open(c.path)
 	if err != nil {

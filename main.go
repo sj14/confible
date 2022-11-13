@@ -29,6 +29,7 @@ func main() {
 		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
 		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
+		cacheList     = flag.Bool("cache-list", false, "list the cached variables")
 		cacheClean    = flag.Bool("cache-clean", false, "remove the cache file")
 		cacheFilepath = flag.String("cache-file", cache.GetCacheFilepath(), "custom path to the cache file")
 		versionFlag   = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
@@ -43,6 +44,14 @@ func main() {
 
 	if *cacheClean {
 		cache.Clean(*cacheFilepath)
+	}
+
+	if *cacheList {
+		c, err := cache.New(*cacheFilepath)
+		if err != nil {
+			log.Fatalf("failed opening cache: %v\n", err)
+		}
+		c.ListVars()
 	}
 
 	mode := config.ModeNormal
