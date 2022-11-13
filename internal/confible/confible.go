@@ -1,5 +1,7 @@
 package confible
 
+import "os"
+
 type File struct {
 	Settings  Settings   `toml:"settings"`
 	Configs   []Config   `toml:"config"`
@@ -13,10 +15,12 @@ type Settings struct {
 }
 
 type Config struct {
-	Path     string `toml:"path"`
-	Truncate bool   `toml:"truncate"`
-	Comment  string `toml:"comment_symbol"`
-	Append   string `toml:"append"`
+	Path     string      `toml:"path"`
+	Truncate bool        `toml:"truncate"`
+	PermDir  os.FileMode `toml:"perm_dir"`
+	PermFile os.FileMode `toml:"perm_file"`
+	Comment  string      `toml:"comment_symbol"`
+	Append   string      `toml:"append"`
 }
 
 type Command struct {

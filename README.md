@@ -166,6 +166,15 @@ exec = [
 path = "path/to/target"
 # Enable truncate for erasing target file beforehand. Default: "false" (optional).
 truncate = false
+# When any directories need to be created to store the config at the given path,
+# the given permissions will be set for those directories. Default: 0o700 (optional).
+# A zero value (no permissions) will be ignored and the default will be used instead.
+# It's not possible to set the permissions for already existing directories. For this
+# use case, you might want to use [[commands]].
+perm_dir = 0o700
+# The given permissions will be set for config. Default: 0o644 (optional).
+# A zero value (no permissions) will be ignored and the default will be used instead.
+perm_file = 0o644
 # Symbol which is recognized as a comment by the target file.
 comment_symbol = "//" 
 append = """
