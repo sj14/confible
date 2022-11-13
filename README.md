@@ -42,6 +42,8 @@ confible [flags] <config.toml> [...]
         remove the cache file
   -cache-file string
         custom path to the cache file
+  -cache-list
+        list the cached variables
   -cached-cmds
         don't execute commands when they didn't change since last execution (default true)
   -cached-vars
