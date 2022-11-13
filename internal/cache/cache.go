@@ -7,11 +7,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/sj14/confible/internal/confible"
-	"github.com/sj14/confible/internal/utils"
 )
 
 // key == variable name; value == variable value
@@ -64,19 +62,11 @@ func (c *Cache) UpsertVar(id, name, value string) {
 }
 
 func GetCacheFilepath() string {
-	switch runtime.GOOS {
-	case "darwin":
-		return utils.AbsFilepath("~/Library/Preferences/confible.cache")
-	case "linux":
-		if os.Getenv("XDG_CONFIG_DIRS") != "" {
-			return os.ExpandEnv("$XDG_CONFIG_DIRS/confible.cache")
-		}
-		return os.ExpandEnv("$HOME/.confible.cache")
-	case "windows":
-		return os.ExpandEnv("$LOCALAPPDATA\\confible.cache")
-	default:
-		return utils.AbsFilepath(filepath.Join("~", ".confible.cache"))
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		log.Fatalf("failed getting cache dir: %v\n", err)
 	}
+	return filepath.Join(cacheDir, "confible.cache")
 }
 
 func Clean(fp string) {
@@ -89,7 +79,6 @@ func Clean(fp string) {
 	if err := cacheFile.Truncate(0); err != nil {
 		log.Fatalf("failed cleaning cache file: %v\n", err)
 	}
-
 }
 
 // DON'T FORGET TO CLOSE FILE
