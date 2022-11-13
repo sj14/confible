@@ -55,6 +55,12 @@ func aggregateConfigs(configs []confible.Config) []confible.Config {
 		if old.Truncate != cfg.Truncate {
 			log.Fatalf("%q should be truncated and also not be truncated\n", cfg.Path)
 		}
+		if old.PermDir != cfg.PermDir {
+			log.Fatalf("%q has perm_dir %q and perm_dir %q\n", cfg.Path, old.PermDir, cfg.PermDir)
+		}
+		if old.PermFile != cfg.PermFile {
+			log.Fatalf("%q has perm_file %q and perm_file %q\n", cfg.Path, old.PermDir, cfg.PermDir)
+		}
 
 		old.Append += cfg.Append
 		configsMap[cfg.Path] = old
@@ -89,16 +95,26 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 	for _, cfg := range configs {
 		fileFlags := os.O_CREATE
 		if cfg.Truncate {
-			fileFlags = os.O_CREATE | os.O_TRUNC
+			fileFlags = fileFlags | os.O_TRUNC
+		}
+
+		permDir := os.FileMode(0o700)
+		if cfg.PermDir != 0 {
+			permDir = cfg.PermDir
+		}
+
+		permFile := os.FileMode(0o644)
+		if cfg.PermFile != 0 {
+			permFile = cfg.PermFile
 		}
 
 		// create folder for the target file if it doesn't exist
-		if err := os.MkdirAll(filepath.Dir(cfg.Path), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(cfg.Path), permDir); err != nil {
 			return fmt.Errorf("failed creating target folder (%v): %v", cfg.Path, err)
 		}
 
 		// open the target file (doesn't create the folder when it doesn't exit)
-		targetFile, err := os.OpenFile(cfg.Path, fileFlags, 0o666)
+		targetFile, err := os.OpenFile(cfg.Path, fileFlags, permFile)
 		if err != nil {
 			return fmt.Errorf("failed reading target file (%v): %v", cfg.Path, err)
 		}
@@ -136,9 +152,16 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 		}
 
 		// write content to the file
-		if err := os.WriteFile(cfg.Path, []byte(newContent), os.ModePerm); err != nil {
+		if err := os.WriteFile(cfg.Path, []byte(newContent), permFile); err != nil {
 			return fmt.Errorf("failed writing target file (%v): %v", cfg.Path, err)
 		}
+
+		// explicitly set permissions as the file might already have existed
+		// and previous calls don't adjust it when it exists.
+		if err := os.Chmod(cfg.Path, permFile); err != nil {
+			return fmt.Errorf("failed setting file permisions %q on %q: %v", permFile, cfg.Path, err)
+		}
+
 		log.Printf("[%v] wrote config to %q\n", confibleFile.Settings.ID, cfg.Path)
 	}
 	return nil
