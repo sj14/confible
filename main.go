@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/sj14/confible/internal/cache"
 	"github.com/sj14/confible/internal/command"
 	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/config"
+	"golang.org/x/exp/slices"
 )
 
 var (
@@ -83,6 +85,16 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		cfg := confible.File{}
 		if err := dec.Decode(&cfg); err != nil {
 			return fmt.Errorf("failed unmarshalling config file: %v", err)
+		}
+
+		// check if we can skip this file
+		if len(cfg.Settings.OSs) != 0 && !slices.Contains(cfg.Settings.OSs, runtime.GOOS) {
+			log.Printf("skipping as operating system %q is not matching config %q\n", runtime.GOOS, cfg.Settings.OSs)
+			continue
+		}
+		if len(cfg.Settings.Archs) != 0 && !slices.Contains(cfg.Settings.Archs, runtime.GOARCH) {
+			log.Printf("skipping as machine arch %q is not matching config %q\n", runtime.GOARCH, cfg.Settings.Archs)
+			continue
 		}
 
 		if cfg.Settings.ID == "" {

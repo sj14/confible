@@ -10,8 +10,10 @@ type File struct {
 }
 
 type Settings struct {
-	ID       string `toml:"id"`
-	Priority int64  `toml:"priority"`
+	ID       string   `toml:"id"`
+	Priority int64    `toml:"priority"`
+	OSs      []string `toml:"os"`
+	Archs    []string `toml:"arch"`
 }
 
 type Config struct {
