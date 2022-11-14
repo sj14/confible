@@ -10,13 +10,13 @@ type File struct {
 }
 
 type Settings struct {
-	ID       string   `toml:"id"`
-	Priority int64    `toml:"priority"`
-	OSs      []string `toml:"os"`
-	Archs    []string `toml:"arch"`
+	ID    string   `toml:"id"`
+	OSs   []string `toml:"os"`
+	Archs []string `toml:"arch"`
 }
 
 type Config struct {
+	Priority int64       `toml:"priority"`
 	Path     string      `toml:"path"`
 	Truncate bool        `toml:"truncate"`
 	PermDir  os.FileMode `toml:"perm_dir"`

@@ -41,7 +41,7 @@ func TestAppendContent(t *testing.T) {
 				comment:    "//",
 				appendText: "new line 1\n{{ .Env.TEST_ENV }}\nnew line 2",
 			},
-			want: `// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
+			want: `// ~~~ CONFIBLE START id: "123" priority: "1000" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 YOLO!!1
@@ -56,7 +56,7 @@ new line 2
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
 			},
-			want: `// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
+			want: `// ~~~ CONFIBLE START id: "123" priority: "1000" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
@@ -73,7 +73,7 @@ new line 2
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "1000" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2
@@ -86,7 +86,7 @@ new line 2
 first line
 second line
 
-// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "1000" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 existing line 1
 existing line 2
@@ -99,7 +99,7 @@ existing line 3
 			want: `first line
 second line
 
-// ~~~ CONFIBLE START id: "123" priority: "0" ~~~
+// ~~~ CONFIBLE START id: "123" priority: "1000" ~~~
 // Mon, 01 Jan 0001 00:00:00 UTC
 new line 1
 new line 2

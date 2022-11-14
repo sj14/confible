@@ -124,7 +124,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 		var newContent string
 		switch mode {
 		case ModeNormal:
-			newContent, err = modifyContent(targetFile, confibleFile.Settings.Priority, confibleFile.Settings.ID, cfg.Comment, cfg.Append, td, time.Now())
+			newContent, err = modifyContent(targetFile, cfg.Priority, confibleFile.Settings.ID, cfg.Comment, cfg.Append, td, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
@@ -281,6 +281,10 @@ type TemplateData struct {
 }
 
 func modifyContent(reader io.Reader, priority int64, id, comment, appendText string, td TemplateData, now time.Time) (string, error) {
+	if priority == 0 {
+		priority = DefaultPriority
+	}
+
 	oldC, oldConfigs, err := fileContent(reader)
 	if err != nil {
 		return "", err

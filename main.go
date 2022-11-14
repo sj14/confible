@@ -100,9 +100,6 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		if cfg.Settings.ID == "" {
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
-		if cfg.Settings.Priority == 0 {
-			cfg.Settings.Priority = config.DefaultPriority
-		}
 
 		// commands which should run before the configs were written
 		if execCmds && mode == config.ModeNormal {
