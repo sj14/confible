@@ -11,6 +11,7 @@ import (
 
 	"github.com/sj14/confible/internal/cache"
 	"github.com/sj14/confible/internal/confible"
+	"golang.org/x/exp/slices"
 )
 
 func Extract(cmds []confible.Command, runAfterCfgs bool) []confible.Command {
@@ -34,6 +35,7 @@ func Exec(id string, commands []confible.Command, useCache bool, cacheFilepath s
 	if len(commands) == 0 {
 		return nil
 	}
+
 	var cacheInstance *cache.Cache
 	if useCache {
 		cacheInstance, err = cache.New(cacheFilepath)
@@ -47,6 +49,16 @@ func Exec(id string, commands []confible.Command, useCache bool, cacheFilepath s
 		}
 	}
 	for _, commands := range commands {
+		// check if we can skip those commands
+		if len(commands.OSs) != 0 && !slices.Contains(commands.OSs, runtime.GOOS) {
+			log.Printf("skipping as operating system %q is not matching commands filter %q\n", runtime.GOOS, commands.OSs)
+			continue
+		}
+		if len(commands.Archs) != 0 && !slices.Contains(commands.Archs, runtime.GOARCH) {
+			log.Printf("skipping as machine arch %q is not matching commands filter %q\n", runtime.GOARCH, commands.Archs)
+			continue
+		}
+
 		for _, cmd := range commands.Exec {
 			if err := ExecNoCache(cmd, os.Stdout); err != nil {
 				return err

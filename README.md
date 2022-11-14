@@ -160,6 +160,10 @@ arch = ["amd64", "arm64"]
 
 
 [[commands]]
+# Same as settings.os but on the command level.
+os = ["darwin", "linux"]
+# Same as settings.arch but on the command level.
+arch = ["amd64", "arm64"]
 # Run the commands before writing the configs. Default: "false" (optional).
 # Set to "true" to run the commands after the configs were written. 
 after_configs = false 
@@ -170,6 +174,10 @@ exec = [
 
 
 [[config]]
+# Same as settings.os but on the config level.
+os = ["darwin", "linux"]
+# Same as settings.arch but on the config level.
+arch = ["amd64", "arm64"]
 # The position of the config written to the target.
 # Lower values are sorted before other confible parts. Default: "1000" (optional)
 priority = 1000
@@ -194,6 +202,10 @@ what you want to add
 
 # variables which can be used in the [[config]] parts (see templating)
 [[variables]]
+# Same as settings.os but on the variables level.
+os = ["darwin", "linux"]
+# Same as settings.arch but on the variables level.
+arch = ["amd64", "arm64"]
 # Variables which will create an input prompt.
 # The first value is the variable name, the second value is the prompt message.
 input = [ 

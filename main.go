@@ -89,11 +89,11 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 
 		// check if we can skip this file
 		if len(cfg.Settings.OSs) != 0 && !slices.Contains(cfg.Settings.OSs, runtime.GOOS) {
-			log.Printf("skipping as operating system %q is not matching config %q\n", runtime.GOOS, cfg.Settings.OSs)
+			log.Printf("skipping as operating system %q is not matching settings filter %q\n", runtime.GOOS, cfg.Settings.OSs)
 			continue
 		}
 		if len(cfg.Settings.Archs) != 0 && !slices.Contains(cfg.Settings.Archs, runtime.GOARCH) {
-			log.Printf("skipping as machine arch %q is not matching config %q\n", runtime.GOARCH, cfg.Settings.Archs)
+			log.Printf("skipping as machine arch %q is not matching settings filter %q\n", runtime.GOARCH, cfg.Settings.Archs)
 			continue
 		}
 
