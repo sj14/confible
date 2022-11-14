@@ -149,9 +149,6 @@ I want to say {{ .Var.say }}
 [settings]
 # the ID allows to execute different configs to the same path
 id = "some unique identifier"
-# The position of the config written to the target.
-# Lower values are sorted before other confible parts. Default: "1000" (optional)
-priority = 1000
 # Filter the operating system. Only when the machines OS matches, the file gets processed.
 # When this is not set, the operating system doesn't matter. Default: "[]" (optional)
 # Possible values ($GOOS): https://go.dev/doc/install/source#environment
@@ -173,6 +170,9 @@ exec = [
 
 
 [[config]]
+# The position of the config written to the target.
+# Lower values are sorted before other confible parts. Default: "1000" (optional)
+priority = 1000
 path = "path/to/target"
 # Enable truncate for erasing target file beforehand. Default: "false" (optional).
 truncate = false
