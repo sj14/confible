@@ -2,6 +2,7 @@
 id = "config"
 
 [[config]]
+priority = 200
 path = "testfiles/config.txt"
 #truncate = true
 comment_symbol = "#"
@@ -11,4 +12,20 @@ my_key=43
 my_key=44
 
 My User is: {{ .Env.USER }}
+"""
+
+[[config]]
+priority = 200
+path = "testfiles/config.txt"
+comment_symbol = "#"
+append = """
+test2
+"""
+
+[[config]]
+priority = 500
+path = "testfiles/config2.txt"
+comment_symbol = "#"
+append = """
+test2
 """

@@ -209,9 +209,10 @@ func TestAggregateConfigs(t *testing.T) {
 			},
 			want: []confible.Config{
 				{
-					Comment: "#",
-					Path:    "/tmp/test",
-					Append:  "line 1\nline 2\n",
+					Comment:  "#",
+					Path:     "/tmp/test",
+					Append:   "line 1\nline 2\n",
+					Priority: DefaultPriority,
 				},
 			},
 		},
