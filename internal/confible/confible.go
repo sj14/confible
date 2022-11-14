@@ -16,6 +16,8 @@ type Settings struct {
 }
 
 type Config struct {
+	OSs      []string    `toml:"os"`
+	Archs    []string    `toml:"arch"`
 	Priority int64       `toml:"priority"`
 	Path     string      `toml:"path"`
 	Truncate bool        `toml:"truncate"`
@@ -26,11 +28,15 @@ type Config struct {
 }
 
 type Command struct {
+	OSs          []string `toml:"os"`
+	Archs        []string `toml:"arch"`
 	AfterConfigs bool     `toml:"after_configs"`
 	Exec         []string `toml:"exec"`
 }
 
 type Variable struct {
+	OSs   []string `toml:"os"`
+	Archs []string `toml:"arch"`
 	Exec  []VarCmd `toml:"exec"`
 	Input []VarVal `toml:"input"`
 }

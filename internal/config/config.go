@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/sj14/confible/internal/confible"
 	"github.com/sj14/confible/internal/utils"
 	"github.com/sj14/confible/internal/variable"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -99,6 +101,16 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 	}
 
 	for _, cfg := range configs {
+		// check if we can skip this config
+		if len(cfg.OSs) != 0 && !slices.Contains(cfg.OSs, runtime.GOOS) {
+			log.Printf("skipping as operating system %q is not matching config filter %q\n", runtime.GOOS, cfg.OSs)
+			continue
+		}
+		if len(cfg.Archs) != 0 && !slices.Contains(cfg.Archs, runtime.GOARCH) {
+			log.Printf("skipping as machine arch %q is not matching config filter %q\n", runtime.GOARCH, cfg.Archs)
+			continue
+		}
+
 		fileFlags := os.O_CREATE
 		if cfg.Truncate {
 			fileFlags = fileFlags | os.O_TRUNC

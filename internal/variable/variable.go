@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/sj14/confible/internal/cache"
 	"github.com/sj14/confible/internal/command"
 	"github.com/sj14/confible/internal/confible"
+	"golang.org/x/exp/slices"
 )
 
 func Parse(id string, variables []confible.Variable, useCached bool, cacheFilepath string) (map[string]string, error) {
@@ -20,6 +22,16 @@ func Parse(id string, variables []confible.Variable, useCached bool, cacheFilepa
 	}
 
 	for _, variables := range variables {
+		// check if we can skip those variables
+		if len(variables.OSs) != 0 && !slices.Contains(variables.OSs, runtime.GOOS) {
+			log.Printf("skipping as operating system %q is not matching variables filter %q\n", runtime.GOOS, variables.OSs)
+			continue
+		}
+		if len(variables.Archs) != 0 && !slices.Contains(variables.Archs, runtime.GOARCH) {
+			log.Printf("skipping as machine arch %q is not matching variables filter %q\n", runtime.GOARCH, variables.Archs)
+			continue
+		}
+
 		for _, cmd := range variables.Exec {
 			output := &bytes.Buffer{}
 
