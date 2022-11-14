@@ -38,6 +38,9 @@ func aggregateConfigs(configs []confible.Config) []confible.Config {
 		if cfg.Comment == "" {
 			log.Fatalf("missing comment symbol\n")
 		}
+		if cfg.Priority == 0 {
+			cfg.Priority = DefaultPriority
+		}
 
 		cfg.Path = utils.AbsFilepath(cfg.Path)
 
@@ -56,10 +59,13 @@ func aggregateConfigs(configs []confible.Config) []confible.Config {
 			log.Fatalf("%q should be truncated and also not be truncated\n", cfg.Path)
 		}
 		if old.PermDir != cfg.PermDir {
-			log.Fatalf("%q has perm_dir %q and perm_dir %q\n", cfg.Path, old.PermDir, cfg.PermDir)
+			log.Fatalf("%q has perm_dir %v and perm_dir %v\n", cfg.Path, old.PermDir, cfg.PermDir)
 		}
 		if old.PermFile != cfg.PermFile {
-			log.Fatalf("%q has perm_file %q and perm_file %q\n", cfg.Path, old.PermDir, cfg.PermDir)
+			log.Fatalf("%q has perm_file %v and perm_file %v\n", cfg.Path, old.PermFile, cfg.PermFile)
+		}
+		if old.Priority != cfg.Priority {
+			log.Fatalf("%q has priority %v and priority %v\n", cfg.Path, old.Priority, cfg.Priority)
 		}
 
 		old.Append += cfg.Append
