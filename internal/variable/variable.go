@@ -24,11 +24,11 @@ func Parse(id string, variables []confible.Variable, useCached bool, cacheFilepa
 	for _, variables := range variables {
 		// check if we can skip those variables
 		if len(variables.OSs) != 0 && !slices.Contains(variables.OSs, runtime.GOOS) {
-			log.Printf("skipping as operating system %q is not matching variables filter %q\n", runtime.GOOS, variables.OSs)
+			log.Printf("[%v] skipping as operating system %q is not matching variables filter %q\n", id, runtime.GOOS, variables.OSs)
 			continue
 		}
 		if len(variables.Archs) != 0 && !slices.Contains(variables.Archs, runtime.GOARCH) {
-			log.Printf("skipping as machine arch %q is not matching variables filter %q\n", runtime.GOARCH, variables.Archs)
+			log.Printf("[%v] skipping as machine arch %q is not matching variables filter %q\n", id, runtime.GOARCH, variables.Archs)
 			continue
 		}
 

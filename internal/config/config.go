@@ -103,11 +103,11 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 	for _, cfg := range configs {
 		// check if we can skip this config
 		if len(cfg.OSs) != 0 && !slices.Contains(cfg.OSs, runtime.GOOS) {
-			log.Printf("skipping as operating system %q is not matching config filter %q\n", runtime.GOOS, cfg.OSs)
+			log.Printf("[%v] skipping as operating system %q is not matching config filter %q\n", confibleFile.Settings.ID, runtime.GOOS, cfg.OSs)
 			continue
 		}
 		if len(cfg.Archs) != 0 && !slices.Contains(cfg.Archs, runtime.GOARCH) {
-			log.Printf("skipping as machine arch %q is not matching config filter %q\n", runtime.GOARCH, cfg.Archs)
+			log.Printf("[%v] skipping as machine arch %q is not matching config filter %q\n", confibleFile.Settings.ID, runtime.GOARCH, cfg.Archs)
 			continue
 		}
 

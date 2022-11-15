@@ -51,11 +51,11 @@ func Exec(id string, commands []confible.Command, useCache bool, cacheFilepath s
 	for _, commands := range commands {
 		// check if we can skip those commands
 		if len(commands.OSs) != 0 && !slices.Contains(commands.OSs, runtime.GOOS) {
-			log.Printf("skipping as operating system %q is not matching commands filter %q\n", runtime.GOOS, commands.OSs)
+			log.Printf("[%v] skipping as operating system %q is not matching commands filter %q\n", id, runtime.GOOS, commands.OSs)
 			continue
 		}
 		if len(commands.Archs) != 0 && !slices.Contains(commands.Archs, runtime.GOARCH) {
-			log.Printf("skipping as machine arch %q is not matching commands filter %q\n", runtime.GOARCH, commands.Archs)
+			log.Printf("[%v] skipping as machine arch %q is not matching commands filter %q\n", id, runtime.GOARCH, commands.Archs)
 			continue
 		}
 
