@@ -184,7 +184,9 @@ arch = ["amd64", "arm64"]
 # Lower values are sorted before other confible parts. Default: "1000" (optional)
 priority = 1000
 path = "path/to/target"
-# Enable truncate for erasing target file beforehand. Default: "false" (optional).
+# Enable truncate for erasing target file before writing/updating. 
+# If the '-clean-id' or '-clean-all' flag is used, the target file will be completely removed.
+# Default: "false" (optional).
 truncate = false
 # When any directories need to be created to store the config at the given path,
 # the given permissions will be set for those directories. Default: 0o700 (optional).
