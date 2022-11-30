@@ -10,9 +10,10 @@ type File struct {
 }
 
 type Settings struct {
-	ID    string   `toml:"id"`
-	OSs   []string `toml:"os"`
-	Archs []string `toml:"arch"`
+	Deactivated bool     `toml:"deactivated"`
+	ID          string   `toml:"id"`
+	OSs         []string `toml:"os"`
+	Archs       []string `toml:"arch"`
 }
 
 type Config struct {

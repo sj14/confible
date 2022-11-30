@@ -147,6 +147,11 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
 		case ModeCleanID, ModeCleanAll:
+			if cfg.Truncate {
+				log.Printf("[%v] deleted config %q as truncate was enabled\n", confibleFile.Settings.ID, cfg.Path)
+				return os.Remove(cfg.Path)
+			}
+
 			var existingConfigs []confibleConfig
 			newContent, existingConfigs, err = fileContent(targetFile)
 			if err != nil {
@@ -180,7 +185,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 			return fmt.Errorf("failed setting file permisions %q on %q: %v", permFile, cfg.Path, err)
 		}
 
-		log.Printf("[%v] wrote config to %q\n", confibleFile.Settings.ID, cfg.Path)
+		log.Printf("[%v] wrote/updated config %q\n", confibleFile.Settings.ID, cfg.Path)
 	}
 	return nil
 }
