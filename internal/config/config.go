@@ -167,7 +167,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 						continue
 					}
 					// but append all other configs
-					newContent = newContent + "\n" + existingCfg.content
+					newContent = newContent + "\n\n" + strings.TrimSpace(existingCfg.content)
 				}
 			}
 		default:
