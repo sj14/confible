@@ -88,6 +88,10 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		}
 
 		// check if we can skip this file
+		if cfg.Settings.Deactivated {
+			log.Printf("[%v] skipping as deactivated\n", cfg.Settings.ID)
+			continue
+		}
 		if len(cfg.Settings.OSs) != 0 && !slices.Contains(cfg.Settings.OSs, runtime.GOOS) {
 			log.Printf("[%v] skipping as operating system %q is not matching settings filter %q\n", cfg.Settings.ID, runtime.GOOS, cfg.Settings.OSs)
 			continue

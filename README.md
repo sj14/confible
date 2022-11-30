@@ -143,10 +143,12 @@ I want to say {{ .Var.say }}
 ```
 
 
-## Config Specification
+## Config Reference
 
 ```toml
 [settings]
+# Disable processing of the given confible file.
+deactivated = false
 # the ID allows to execute different configs to the same path
 id = "some unique identifier"
 # Filter the operating system. Only when the machines OS matches, the file gets processed.
