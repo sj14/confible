@@ -24,13 +24,11 @@ var (
 
 func main() {
 	var (
-		applyCmds  = flag.Bool("apply-cmds", true, "exec commands")
-		applyCfgs  = flag.Bool("apply-cfgs", true, "apply configs")
-		cachedVars = flag.Bool("cached-vars", true, "use the variables from the cache when present")
-		cachedCmds = flag.Bool("cached-cmds", true, "don't execute commands when they didn't change since last execution")
-		cleanID    = flag.Bool("clean-id", false, "give a confible file and it will remove the config from configured targets matching the config id")
-		cleanAll   = flag.Bool("clean-all", false, "give a confible file and it will remove all configs from the targets")
-		// cleanTarget = flag.Bool("clean-target", false, "give the target file and it will remove all configs (ignores no-cmd and no-cfg flags)")
+		applyCmds     = flag.Bool("apply-cmds", true, "exec commands")
+		applyCfgs     = flag.Bool("apply-cfgs", true, "apply configs")
+		cachedVars    = flag.Bool("cached-vars", true, "use the variables from the cache when present")
+		cachedCmds    = flag.Bool("cached-cmds", true, "don't execute commands when they didn't change since last execution")
+		cleanID       = flag.Bool("clean", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cacheList     = flag.Bool("cache-list", false, "list the cached variables")
 		cacheClean    = flag.Bool("cache-clean", false, "remove the cache file")
 		cacheFilepath = flag.String("cache-file", cache.GetCacheFilepath(), "custom path to the cache file")
@@ -56,13 +54,9 @@ func main() {
 		c.ListVars()
 	}
 
-	mode := config.ModeNormal
+	mode := config.ModeAppend
 	if *cleanID {
 		mode = config.ModeCleanID
-	}
-
-	if *cleanAll {
-		mode = config.ModeCleanAll
 	}
 
 	if err := processConfibleFiles(flag.Args(), *applyCmds, *applyCfgs, *cachedCmds, *cachedVars, *cacheFilepath, mode); err != nil {
@@ -106,7 +100,7 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		}
 
 		// commands which should run before the configs were written
-		if execCmds && mode == config.ModeNormal {
+		if execCmds && mode == config.ModeAppend {
 			if err := command.Exec(cfg.Settings.ID, command.Extract(cfg.Commands, false), cachedCmds, cacheFilepath); err != nil {
 				return err
 			}
@@ -119,7 +113,7 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		}
 
 		// commands which should run after the configs were written
-		if execCmds && mode == config.ModeNormal {
+		if execCmds && mode == config.ModeAppend {
 			if err := command.Exec(cfg.Settings.ID, command.Extract(cfg.Commands, true), cachedCmds, cacheFilepath); err != nil {
 				return err
 			}

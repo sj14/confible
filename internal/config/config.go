@@ -87,7 +87,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 
 	var td TemplateData
 
-	if mode == ModeNormal {
+	if mode == ModeAppend {
 		// only create template when we are not in a clean mode
 		variableMap, err := variable.Parse(confibleFile.Settings.ID, confibleFile.Variables, useCached, cacheFilepath)
 		if err != nil {
@@ -141,12 +141,12 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 		// process new file content
 		var newContent string
 		switch mode {
-		case ModeNormal:
+		case ModeAppend:
 			newContent, err = modifyContent(targetFile, cfg.Priority, confibleFile.Settings.ID, cfg.Comment, cfg.Append, td, time.Now())
 			if err != nil {
 				return fmt.Errorf("failed appending new content: %w", err)
 			}
-		case ModeCleanID, ModeCleanAll:
+		case ModeCleanID:
 			if cfg.Truncate {
 				log.Printf("[%v] deleted config %q as truncate was enabled\n", confibleFile.Settings.ID, cfg.Path)
 				return os.Remove(cfg.Path)
@@ -158,17 +158,13 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 				return fmt.Errorf("failed cleaning id config: %w", err)
 			}
 
-			// ModeCleanAll: we are done, just newContent is enough
-
-			if mode == ModeCleanID {
-				for _, existingCfg := range existingConfigs {
-					// we want to clean this config
-					if existingCfg.id == confibleFile.Settings.ID {
-						continue
-					}
-					// but append all other configs
-					newContent = newContent + "\n\n" + strings.TrimSpace(existingCfg.content)
+			for _, existingCfg := range existingConfigs {
+				// we want to clean this config
+				if existingCfg.id == confibleFile.Settings.ID {
+					continue
 				}
+				// but append all other configs
+				newContent = newContent + "\n\n" + strings.TrimSpace(existingCfg.content)
 			}
 		default:
 			return fmt.Errorf("wrong or no mode specified")
@@ -185,7 +181,7 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 			return fmt.Errorf("failed setting file permisions %q on %q: %v", permFile, cfg.Path, err)
 		}
 
-		log.Printf("[%v] wrote/updated config %q\n", confibleFile.Settings.ID, cfg.Path)
+		log.Printf("[%v] wrote config %q\n", confibleFile.Settings.ID, cfg.Path)
 	}
 	return nil
 }
@@ -193,9 +189,8 @@ func ModifyTargetFiles(confibleFile confible.File, useCached bool, cacheFilepath
 type ContentMode uint8
 
 const (
-	ModeNormal ContentMode = iota
+	ModeAppend ContentMode = iota
 	ModeCleanID
-	ModeCleanAll
 )
 
 type confibleConfig struct {
