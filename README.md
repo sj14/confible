@@ -48,9 +48,7 @@ confible [flags] <config.toml> [...]
         don't execute commands when they didn't change since last execution (default true)
   -cached-vars
         use the variables from the cache when present (default true)
-  -clean-all
-        give a confible file and it will remove all configs from the targets
-  -clean-id
+  -clean
         give a confible file and it will remove the config from configured targets matching the config id
   -version
         print version information
@@ -185,7 +183,7 @@ arch = ["amd64", "arm64"]
 priority = 1000
 path = "path/to/target"
 # Enable truncate for erasing target file before writing/updating. 
-# If the '-clean-id' or '-clean-all' flag is used, the target file will be completely removed.
+# If the '-clean' flag is used, the target file will be completely removed.
 # Default: "false" (optional).
 truncate = false
 # When any directories need to be created to store the config at the given path,
