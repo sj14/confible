@@ -82,10 +82,6 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		}
 
 		// check if we can skip this file
-		if cfg.Settings.Deactivated {
-			log.Printf("[%v] skipping as deactivated\n", cfg.Settings.ID)
-			continue
-		}
 		if len(cfg.Settings.OSs) != 0 && !slices.Contains(cfg.Settings.OSs, runtime.GOOS) {
 			log.Printf("[%v] skipping as operating system %q is not matching settings filter %q\n", cfg.Settings.ID, runtime.GOOS, cfg.Settings.OSs)
 			continue
@@ -99,21 +95,27 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 			return fmt.Errorf("missing ID for %q", configPath)
 		}
 
+		cfgmode := mode
+		if cfg.Settings.Deactivated {
+			log.Printf("[%v] cleaning configs as 'deactivated' is set\n", cfg.Settings.ID)
+			cfgmode = config.ModeCleanID
+		}
+
 		// commands which should run before the configs were written
-		if execCmds && mode == config.ModeAppend {
+		if execCmds && cfgmode == config.ModeAppend {
 			if err := command.Exec(cfg.Settings.ID, command.Extract(cfg.Commands, false), cachedCmds, cacheFilepath); err != nil {
 				return err
 			}
 		}
 
 		if applyCfgs {
-			if err := config.ModifyTargetFiles(cfg, useCachedVars, cacheFilepath, mode); err != nil {
+			if err := config.ModifyTargetFiles(cfg, useCachedVars, cacheFilepath, cfgmode); err != nil {
 				return err
 			}
 		}
 
 		// commands which should run after the configs were written
-		if execCmds && mode == config.ModeAppend {
+		if execCmds && cfgmode == config.ModeAppend {
 			if err := command.Exec(cfg.Settings.ID, command.Extract(cfg.Commands, true), cachedCmds, cacheFilepath); err != nil {
 				return err
 			}
