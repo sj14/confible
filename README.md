@@ -145,10 +145,12 @@ I want to say {{ .Var.say }}
 
 ```toml
 [settings]
-# Disable processing of the given confible file.
-deactivated = false
 # the ID allows to execute different configs to the same path
 id = "some unique identifier"
+# When deactivated is set to 'true', it won't appended the
+# target configs but behave like the '-clean' flag is set,
+# removing any configs from the targets with the given id.
+deactivated = false
 # Filter the operating system. Only when the machines OS matches, the file gets processed.
 # When this is not set, the operating system doesn't matter. Default: "[]" (optional)
 # Possible values ($GOOS): https://go.dev/doc/install/source#environment
