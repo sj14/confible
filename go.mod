@@ -3,8 +3,8 @@ module github.com/sj14/confible
 go 1.18
 
 require (
-	github.com/pelletier/go-toml/v2 v2.0.5
-	github.com/stretchr/testify v1.8.0
+	github.com/pelletier/go-toml/v2 v2.0.7
+	github.com/stretchr/testify v1.8.1
 	golang.org/x/exp v0.0.0-20221208044002-44028be4359e
 )
 
