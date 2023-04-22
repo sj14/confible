@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/pelletier/go-toml/v2 v2.0.7
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20221208044002-44028be4359e
 )
 
