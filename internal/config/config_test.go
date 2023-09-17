@@ -1,10 +1,7 @@
 package config
 
 import (
-	"bytes"
-	"io"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -15,7 +12,7 @@ import (
 
 func TestAppendContent(t *testing.T) {
 	type args struct {
-		reader     io.Reader
+		existing   string
 		id         string
 		priority   int64
 		comment    string
@@ -36,7 +33,7 @@ func TestAppendContent(t *testing.T) {
 				require.Nil(t, err)
 			},
 			args: args{
-				reader:     bytes.NewBufferString(""),
+				existing:   "",
 				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\n{{ .Env.TEST_ENV }}\nnew line 2",
@@ -51,7 +48,7 @@ new line 2
 		{
 			name: "empty file",
 			args: args{
-				reader:     bytes.NewBufferString(""),
+				existing:   "",
 				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
@@ -65,7 +62,7 @@ new line 2
 		{
 			name: "untouched file",
 			args: args{
-				reader:     bytes.NewBufferString("first line\nsecond line"),
+				existing:   "first line\nsecond line",
 				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
@@ -82,7 +79,7 @@ new line 2
 		{
 			name: "touched file",
 			args: args{
-				reader: bytes.NewBufferString(`
+				existing: `
 first line
 second line
 
@@ -91,7 +88,7 @@ second line
 existing line 1
 existing line 2
 existing line 3
-// ~~~ CONFIBLE END id: "123" ~~~`),
+// ~~~ CONFIBLE END id: "123" ~~~`,
 				id:         "123",
 				comment:    "//",
 				appendText: "new line 1\nnew line 2",
@@ -108,7 +105,7 @@ new line 2
 		{
 			name: "config with other id higher",
 			args: args{
-				reader: bytes.NewBufferString(`
+				existing: `
 first line
 second line
 
@@ -116,7 +113,7 @@ second line
 // Mon, 01 Jan 0001 00:00:00 UTC
 That's not your config yo!
 Just leave me here!
-// ~~~ CONFIBLE END id: "another config" ~~~`),
+// ~~~ CONFIBLE END id: "another config" ~~~`,
 				id:         "123",
 				priority:   1,
 				comment:    "//",
@@ -140,7 +137,7 @@ Just leave me here!
 		{
 			name: "config with other id lower",
 			args: args{
-				reader: bytes.NewBufferString(`
+				existing: `
 first line
 second line
 
@@ -148,7 +145,7 @@ second line
 // Mon, 01 Jan 0001 00:00:00 UTC
 That's not your config yo!
 Just leave me here!
-// ~~~ CONFIBLE END id: "another config" ~~~`),
+// ~~~ CONFIBLE END id: "another config" ~~~`,
 				id:         "123",
 				priority:   2,
 				comment:    "//",
@@ -176,7 +173,7 @@ new line 2
 				tt.customSetup()
 			}
 
-			got, err := modifyContent(tt.args.reader, tt.args.priority, tt.args.id, tt.args.comment, tt.args.appendText, TemplateData{Env: utils.GetEnvMap()}, tt.args.now)
+			got, err := appendConfig(tt.args.existing, tt.args.priority, tt.args.id, tt.args.comment, tt.args.appendText, TemplateData{Env: utils.GetEnvMap()}, tt.args.now)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("appendContent() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -227,8 +224,8 @@ func TestAggregateConfigs(t *testing.T) {
 
 func TestFileContent(t *testing.T) {
 	type args struct {
-		reader io.Reader
-		id     string
+		existing string
+		id       string
 	}
 	tests := []struct {
 		name        string
@@ -240,7 +237,7 @@ func TestFileContent(t *testing.T) {
 		{
 			name: "basic",
 			args: args{
-				reader: strings.NewReader(`
+				existing: `
 some stuff before
 
 # ~~~ CONFIBLE START id: "zshrc" ~~~
@@ -248,7 +245,7 @@ some stuff before
 blablabka
 # ~~~ CONFIBLE END id: "zshrc" ~~~	
 
-some stuff after`),
+some stuff after`,
 				id: "another id",
 			},
 			wantContent: `some stuff before
@@ -266,7 +263,7 @@ some stuff after`,
 		{
 			name: "several configs",
 			args: args{
-				reader: strings.NewReader(`
+				existing: `
 some stuff before
 
 # ~~~ CONFIBLE START id: "zshrc" priority: "55" ~~~
@@ -280,7 +277,7 @@ yolo yolo
 # ~~~ CONFIBLE END id: "other" ~~~	
 
 
-some stuff after`),
+some stuff after`,
 				id: "another id",
 			},
 			wantContent: `some stuff before
@@ -304,12 +301,11 @@ some stuff after`,
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotContent, gotConfigs, err := fileContent(tt.args.reader)
+			gotConfigs, err := extractConfigs(tt.args.existing)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("fileContent() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			require.Equal(t, tt.wantContent, gotContent)
 			require.Equal(t, tt.wantConfigs, gotConfigs)
 		})
 	}

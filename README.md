@@ -33,17 +33,18 @@ confible [flags] <config.toml> [...]
 ```
 
 ```text
- Usage of confible:
   -apply-cfgs
         apply configs (default true)
   -apply-cmds
         exec commands (default true)
   -cache-clean
-        remove the cache file
+        remove the cache for the given configs
   -cache-file string
         custom path to the cache file
   -cache-list
         list the cached variables
+  -cache-prune
+        remove the cache file used for all configs
   -cached-cmds
         don't execute commands when they didn't change since last execution (default true)
   -cached-vars
