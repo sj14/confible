@@ -45,12 +45,11 @@ func Parse(id string, variables []confible.Variable, useCached bool, cacheFilepa
 		// variables from input
 		for _, input := range variables.Input {
 			cachedValue := cacheInstance.LoadVar(id, input.VariableName)
-			if cachedValue != "" {
-				if useCached {
-					cacheInstance.UpsertVar(id, input.VariableName, cachedValue)
-					log.Printf("[%v] using cached variable %q: %q", id, input.VariableName, cachedValue)
-					continue
-				}
+			// no input given, use cached value (when enabled)
+			if cachedValue != "" && useCached {
+				cacheInstance.UpsertVar(id, input.VariableName, cachedValue)
+				log.Printf("[%v] using cached variable %q: %q", id, input.VariableName, cachedValue)
+				continue
 			}
 
 			reader := bufio.NewReader(os.Stdin)

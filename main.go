@@ -30,9 +30,11 @@ func main() {
 		cachedCmds    = flag.Bool("cached-cmds", true, "don't execute commands when they didn't change since last execution")
 		cleanID       = flag.Bool("clean", false, "give a confible file and it will remove the config from configured targets matching the config id")
 		cacheList     = flag.Bool("cache-list", false, "list the cached variables")
-		cacheClean    = flag.Bool("cache-clean", false, "remove the cache file")
+		cachePrune    = flag.Bool("cache-prune", false, "remove the cache file used for all configs")
+		cacheClean    = flag.Bool("cache-clean", false, "remove the cache for the given configs")
 		cacheFilepath = flag.String("cache-file", cache.GetCacheFilepath(), "custom path to the cache file")
-		versionFlag   = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
+		// verbosity     = flag.Uint("verbosity", 1, "verbosity of the output (0-3)")
+		versionFlag = flag.Bool("version", false, fmt.Sprintf("print version information (%v)", version))
 	)
 	flag.Parse()
 
@@ -42,11 +44,12 @@ func main() {
 		fmt.Printf("date: %v\n", date)
 	}
 
-	if *cacheClean {
-		cache.Clean(*cacheFilepath)
+	if *cachePrune {
+		cache.Prune(*cacheFilepath)
 	}
 
 	if *cacheList {
+		fmt.Printf("cache path: %s\n\n", *cacheFilepath)
 		c, err := cache.New(*cacheFilepath)
 		if err != nil {
 			log.Fatalf("failed opening cache: %v\n", err)
@@ -59,12 +62,12 @@ func main() {
 		mode = config.ModeCleanID
 	}
 
-	if err := processConfibleFiles(flag.Args(), *applyCmds, *applyCfgs, *cachedCmds, *cachedVars, *cacheFilepath, mode); err != nil {
+	if err := processConfibleFiles(flag.Args(), *applyCmds, *applyCfgs, *cachedCmds, *cachedVars, *cacheClean, *cacheFilepath, mode); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds, useCachedVars bool, cacheFilepath string, mode config.ContentMode) error {
+func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds, useCachedVars, cleanCache bool, cacheFilepath string, mode config.ContentMode) error {
 	for _, configPath := range configPaths {
 		log.Printf("processing config %q\n", configPath)
 
@@ -99,6 +102,13 @@ func processConfibleFiles(configPaths []string, execCmds, applyCfgs, cachedCmds,
 		if cfg.Settings.Deactivated {
 			log.Printf("[%v] cleaning configs as 'deactivated' is set\n", cfg.Settings.ID)
 			cfgmode = config.ModeCleanID
+		}
+
+		if cleanCache {
+			log.Printf("[%v] cleaning cache\n", cfg.Settings.ID)
+			if err := cache.Clean(cacheFilepath, cfg.Settings.ID); err != nil {
+				log.Printf("failed to clean cache for %s\n", cfg.Settings.ID)
+			}
 		}
 
 		// commands which should run before the configs were written

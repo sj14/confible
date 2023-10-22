@@ -69,7 +69,7 @@ func GetCacheFilepath() string {
 	return filepath.Join(cacheDir, "confible.cache")
 }
 
-func Clean(fp string) {
+func Prune(fp string) {
 	cacheFile, err := open(fp)
 	if err != nil {
 		log.Fatalf("failed to open cache file: %v", err)
@@ -155,4 +155,16 @@ func (c *Cache) Store(cacheFilepath string) error {
 
 	encoder := gob.NewEncoder(cacheFile)
 	return encoder.Encode(cacheToGob(*c))
+}
+
+func Clean(path, id string) error {
+	c, err := New(path)
+	if err != nil {
+		return err
+	}
+
+	delete(c.variables, id)
+	delete(c.commands, id)
+
+	return c.Store(path)
 }
