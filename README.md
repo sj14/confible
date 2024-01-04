@@ -95,7 +95,7 @@ filetype indent plugin on
 " ~~~ CONFIBLE END id: "vimrc" ~~~
 ```
 
-Check my personal config [repository](https://github.com/sj14/dotfiles) for more examples.
+Check my personal config [repository](https://github.com/sj14/dotfiles/tree/a752fbc88031bc99b59b5d24fe342dcdafdac750/confible) for more examples.
 
 ## Templates
 
