@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/pelletier/go-toml/v2 v2.1.1
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20221208044002-44028be4359e
 )
 
